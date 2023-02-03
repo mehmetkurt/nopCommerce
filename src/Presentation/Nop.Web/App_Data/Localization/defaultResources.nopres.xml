@@ -3427,7 +3427,10 @@
     <Value>Categories with the same name are not supported in the same category level. Check your category list in "Catalog -&gt; Categories" page</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Catalog.Products.Import.DatabaseNotContainCategory">
-    <Value>Database doesn't contain the '{0}' category</Value>
+    <Value>Import product '{0}'. Database doesn't contain the '{1}' category</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Catalog.Products.Import.DatabaseNotContainManufacturer">
+    <Value>Import product '{0}'. Database doesn't contain the '{1}' manufacturer</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Catalog.Products.Import.ManufacturersDontExist">
     <Value>Manufacturers with the following names and/or IDs don't exist: {0}</Value>
@@ -4458,6 +4461,12 @@
   <LocaleResource Name="Admin.Configuration.AppSettings.Common">
     <Value>Common configuration</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.AppSettings.Common.CrawlerOnlyAdditionalUserAgentStringsPath">
+    <Value>Crawler user agent additional strings path</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.AppSettings.Common.CrawlerOnlyAdditionalUserAgentStringsPath.Hint">
+    <Value>Specify a path to the file with additional crawler only user agent strings.</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Configuration.AppSettings.Common.CrawlerOnlyUserAgentStringsPath">
     <Value>Crawler user agent strings path</Value>
   </LocaleResource>
@@ -4574,6 +4583,12 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Configuration.AppSettings.DistributedCache.TableName.Hint">
     <Value>Specify the table name"</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.AppSettings.DistributedCache.InstanceName">
+    <Value>Instance name</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.AppSettings.DistributedCache.InstanceName.Hint">
+    <Value>Specify the instance name (by default "nopCommerce")</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Configuration.AppSettings.EnvironmentVariablesWarning">
     <Value>Warning! The current setting value is overridden in environment variables</Value>
@@ -5773,7 +5788,7 @@
     <Value>Cache product prices</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Configuration.Settings.Catalog.CacheProductPrices.Hint">
-    <Value>Check to cache product prices. It can significantly improve performance. But you not should enable it if you use some complex discounts, discount requirement rules, or coupon codes.</Value>
+    <Value>Check to cache product prices. It can significantly improve performance. But you should not enable it if you use some complex discounts, discount requirement rules, or coupon codes.</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Configuration.Settings.Catalog.CategoryBreadcrumbEnabled">
     <Value>Category breadcrumb enabled</Value>
@@ -6707,6 +6722,12 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Configuration.Settings.CustomerUser.PasswordLifetime.Hint">
     <Value>Specify number of days for password expiration. Don't forget to check "EnablePasswordLifetime" property on customer role edit page for those roles, who will have to change passwords.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.CustomerUser.PasswordMaxLength">
+    <Value>Password maximum length</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.CustomerUser.PasswordMaxLength.Hint">
+    <Value>Specify password maximum length.</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Configuration.Settings.CustomerUser.PasswordMinLength">
     <Value>Password minimum length</Value>
@@ -16830,6 +16851,9 @@
   <LocaleResource Name="Currency.Selector.Label">
     <Value>Currency selector</Value>
   </LocaleResource>
+  <LocaleResource Name="Customer.FullNameFormat">
+    <Value>{0} {1}</Value>
+  </LocaleResource>
   <LocaleResource Name="Customer.Guest">
     <Value>Guest</Value>
   </LocaleResource>
@@ -19623,6 +19647,9 @@
   <LocaleResource Name="ShoppingCart.Rental.StartDateShouldBeFuture">
     <Value>Rental start date should be the future date</Value>
   </LocaleResource>
+  <LocaleResource Name="ShoppingCart.ReorderWarning">
+    <Value>Some products are not available anymore, so they weren't added to the cart.</Value>
+  </LocaleResource>
   <LocaleResource Name="ShoppingCart.RequiredProductUpdateWarning">
     <Value>This product is required in the quantity of {0}</Value>
   </LocaleResource>
@@ -19774,7 +19801,7 @@
     <Value>Password is required.</Value>
   </LocaleResource>
   <LocaleResource Name="Validation.Password.LengthValidation">
-    <Value><![CDATA[<li>must have at least {0} characters</li>]]></Value>
+    <Value><![CDATA[<li>must have at least {0} characters and not greater than {1} characters</li>]]></Value>
   </LocaleResource>
   <LocaleResource Name="Validation.Password.RequireDigit">
     <Value><![CDATA[<li>must have at least one digit</li>]]></Value>

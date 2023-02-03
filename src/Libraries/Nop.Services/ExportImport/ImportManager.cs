@@ -2176,10 +2176,11 @@ namespace Nop.Services.ExportImport
 
                             if (!rez.HasValue)
                                 //database doesn't contain the imported category
-                                throw new ArgumentException(string.Format(await _localizationService.GetResourceAsync("Admin.Catalog.Products.Import.DatabaseNotContainCategory"), categoryKey.Key));
+                                //this can happen if the category was deleted during the import process
+                                await _logger.WarningAsync(string.Format(await _localizationService.GetResourceAsync("Admin.Catalog.Products.Import.DatabaseNotContainCategory"), product.Name, categoryKey.Key));
 
-                            return rez.Value;
-                        }).ToListAsync();
+                            return rez;
+                        }).Where(id => id != null).ToListAsync();
 
                     foreach (var categoryId in importedCategories)
                     {
@@ -2189,7 +2190,7 @@ namespace Nop.Services.ExportImport
                         var productCategory = new ProductCategory
                         {
                             ProductId = product.Id,
-                            CategoryId = categoryId,
+                            CategoryId = categoryId.Value,
                             IsFeaturedProduct = false,
                             DisplayOrder = 1
                         };
@@ -2211,8 +2212,26 @@ namespace Nop.Services.ExportImport
 
                     //manufacturer mappings
                     var manufacturers = isNew || !allProductsManufacturerIds.ContainsKey(product.Id) ? Array.Empty<int>() : allProductsManufacturerIds[product.Id];
-                    var importedManufacturers = manufacturerList.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(x => allManufacturers.FirstOrDefault(m => m.Name == x.Trim())?.Id ?? int.Parse(x.Trim())).ToList();
+
+                   var importedManufacturers = await manufacturerList
+                       .Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                       .SelectAwait(async x =>
+                       {
+                           var id = allManufacturers.FirstOrDefault(m => m.Name == x.Trim())?.Id;
+
+                           if (id != null)
+                               return id;
+
+                           id = int.TryParse(x, out var parsedId) ? parsedId : null;
+
+                           if (!id.HasValue)
+                               //database doesn't contain the imported manufacturer
+                               //this can happen if the manufacturer was deleted during the import process
+                               await _logger.WarningAsync(string.Format(await _localizationService.GetResourceAsync("Admin.Catalog.Products.Import.DatabaseNotContainManufacturer"), product.Name, x));
+
+                           return id;
+                       }).Where(id => id.HasValue).ToListAsync();
+
                     foreach (var manufacturerId in importedManufacturers)
                     {
                         if (manufacturers.Any(c => c == manufacturerId))
@@ -2221,7 +2240,7 @@ namespace Nop.Services.ExportImport
                         var productManufacturer = new ProductManufacturer
                         {
                             ProductId = product.Id,
-                            ManufacturerId = manufacturerId,
+                            ManufacturerId = manufacturerId.Value,
                             IsFeaturedProduct = false,
                             DisplayOrder = 1
                         };
@@ -2230,8 +2249,8 @@ namespace Nop.Services.ExportImport
 
                     //delete product manufacturers
                     var deletedProductsManufacturers = await manufacturers.Where(manufacturerId => !importedManufacturers.Contains(manufacturerId))
-                        .SelectAwait(async manufacturerId => (await _manufacturerService.GetProductManufacturersByProductIdAsync(product.Id)).First(pc => pc.ManufacturerId == manufacturerId)).ToListAsync();
-                    foreach (var deletedProductManufacturer in deletedProductsManufacturers)
+                        .SelectAwait(async manufacturerId => (await _manufacturerService.GetProductManufacturersByProductIdAsync(product.Id)).FirstOrDefault(pc => pc.ManufacturerId == manufacturerId)).ToListAsync();
+                    foreach (var deletedProductManufacturer in deletedProductsManufacturers.Where(m => m != null))
                         await _manufacturerService.DeleteProductManufacturerAsync(deletedProductManufacturer);
                 }
 
