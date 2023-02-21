@@ -480,10 +480,7 @@ namespace Nop.Services.Orders
                 details.AffiliateId = affiliate.Id;
 
             //tax display type
-            if (_taxSettings.AllowCustomersToSelectTaxDisplayType)
-                details.CustomerTaxDisplayType = (TaxDisplayType)details.Customer.TaxDisplayTypeId;
-            else
-                details.CustomerTaxDisplayType = _taxSettings.TaxDisplayType;
+            details.CustomerTaxDisplayType = await _customerService.GetCustomerTaxDisplayTypeAsync(details.Customer);
 
             //recurring or standard shopping cart?
             details.IsRecurringShoppingCart = await _shoppingCartService.ShoppingCartIsRecurringAsync(details.Cart);
