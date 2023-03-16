@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
@@ -68,26 +65,30 @@ namespace Nop.Tests.Nop.Core.Tests.Caching
         }
 
         [Test]
-        [Ignore("Doesn't work for current in memory implementation")]
         public async Task CanClearCache()
         {
-            await _staticCacheManager.SetAsync(new CacheKey("some_key_1"), 1);
-            await _staticCacheManager.SetAsync(new CacheKey("some_key_2"), 2);
-            await _staticCacheManager.SetAsync(new CacheKey("some_key_3"), 3);
+            using (var scope = _serviceScopeFactory.CreateScope())
+            {
+                var manager = GetService<MemoryDistributedCacheManager>(scope);
+                manager.Equals(_staticCacheManager).Should().BeFalse();
+                await manager.SetAsync(new CacheKey("some_key_1"), 1);
+                await manager.SetAsync(new CacheKey("some_key_2"), 2);
+                await manager.SetAsync(new CacheKey("some_key_3"), 3);
+            }
 
             using (var scope = _serviceScopeFactory.CreateScope())
             {
                 var manager = GetService<MemoryDistributedCacheManager>(scope);
                 manager.Equals(_staticCacheManager).Should().BeFalse();
-                _staticCacheManager.Get<int?>(new CacheKey("some_key_1"), null).Should().Be(1);
-                _staticCacheManager.Get<int?>(new CacheKey("some_key_2"), null).Should().Be(2);
-                _staticCacheManager.Get<int?>(new CacheKey("some_key_3"), null).Should().Be(3);
+                manager.Get<int?>(new CacheKey("some_key_1"), null).Should().Be(1);
+                manager.Get<int?>(new CacheKey("some_key_2"), null).Should().Be(2);
+                manager.Get<int?>(new CacheKey("some_key_3"), null).Should().Be(3);
                 await manager.ClearAsync();
             }
 
-            _staticCacheManager.Get<int?>(new CacheKey("some_key_1"), null).Should().BeNull();
-            _staticCacheManager.Get<int?>(new CacheKey("some_key_2"), null).Should().BeNull();
-            _staticCacheManager.Get<int?>(new CacheKey("some_key_3"), null).Should().BeNull();
+            _staticCacheManager.Get<int?>(new CacheKey("some_key_1"), () => null).Should().BeNull();
+            _staticCacheManager.Get<int?>(new CacheKey("some_key_2"), () => null).Should().BeNull();
+            _staticCacheManager.Get<int?>(new CacheKey("some_key_3"), () => null).Should().BeNull();
         }
 
         [Test]
@@ -148,11 +149,17 @@ namespace Nop.Tests.Nop.Core.Tests.Caching
         }
 
         [Test]
-        public void ThrowsException()
+        public async Task SholThrowsExceptionButNotCacheIt()
         {
+            var cacheKey = new CacheKey("some_key_1");
+
             Assert.ThrowsAsync<ApplicationException>(() => _staticCacheManager.GetAsync(
-                new CacheKey("some_key_1"),
+                cacheKey,
                 Task<object> () => throw new ApplicationException()));
+
+            //should not cache exception
+            var rez = await _staticCacheManager.GetAsync(cacheKey, Task<object> () => Task.FromResult((object)1));
+            rez.Should().Be(1);
         }
 
         [Test]
@@ -178,6 +185,17 @@ namespace Nop.Tests.Nop.Core.Tests.Caching
             var value = await _staticCacheManager.GetAsync(new CacheKey("some_key_1"), () => Task.FromResult(-1));
             value.Should().Be(0);
             xs.Sum().Should().Be(1);
+        }
+
+        [Test]
+        public async Task CanGetAsObject()
+        {
+            var key = new CacheKey("some_key_1");
+            await _staticCacheManager.SetAsync(key, 1);
+            var obj = await _staticCacheManager.GetAsync(key);
+            obj.Should().Be(1);
+            obj = await _staticCacheManager.GetAsync(new CacheKey("some_key_2"));
+            obj.Should().BeNull();
         }
     }
 }

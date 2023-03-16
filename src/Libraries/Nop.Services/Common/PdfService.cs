@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.IO.Compression;
 using Nop.Core;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Common;
@@ -16,6 +11,7 @@ using Nop.Core.Domain.Stores;
 using Nop.Core.Domain.Tax;
 using Nop.Core.Domain.Vendors;
 using Nop.Core.Infrastructure;
+using Nop.Services.Attributes;
 using Nop.Services.Catalog;
 using Nop.Services.Common.Pdf;
 using Nop.Services.Configuration;
@@ -41,37 +37,37 @@ namespace Nop.Services.Common
     {
         #region Fields
 
-        private readonly AddressSettings _addressSettings;
-        private readonly CatalogSettings _catalogSettings;
-        private readonly CurrencySettings _currencySettings;
-        private readonly IAddressAttributeFormatter _addressAttributeFormatter;
-        private readonly IAddressService _addressService;
-        private readonly ICountryService _countryService;
-        private readonly ICurrencyService _currencyService;
-        private readonly IDateTimeHelper _dateTimeHelper;
-        private readonly IGiftCardService _giftCardService;
-        private readonly IHtmlFormatter _htmlFormatter;
-        private readonly ILanguageService _languageService;
-        private readonly ILocalizationService _localizationService;
-        private readonly IMeasureService _measureService;
-        private readonly INopFileProvider _fileProvider;
-        private readonly IOrderService _orderService;
-        private readonly IPaymentPluginManager _paymentPluginManager;
-        private readonly IPaymentService _paymentService;
-        private readonly IPictureService _pictureService;
-        private readonly IPriceFormatter _priceFormatter;
-        private readonly IProductService _productService;
-        private readonly IRewardPointService _rewardPointService;
-        private readonly ISettingService _settingService;
-        private readonly IShipmentService _shipmentService;
-        private readonly IStateProvinceService _stateProvinceService;
-        private readonly IStoreContext _storeContext;
-        private readonly IStoreService _storeService;
-        private readonly IVendorService _vendorService;
-        private readonly IWorkContext _workContext;
-        private readonly MeasureSettings _measureSettings;
-        private readonly TaxSettings _taxSettings;
-        private readonly VendorSettings _vendorSettings;
+        protected readonly AddressSettings _addressSettings;
+        protected readonly CatalogSettings _catalogSettings;
+        protected readonly CurrencySettings _currencySettings;
+        protected readonly IAddressService _addressService;
+        protected readonly IAttributeFormatter<AddressAttribute, AddressAttributeValue> _addressAttributeFormatter;
+        protected readonly ICountryService _countryService;
+        protected readonly ICurrencyService _currencyService;
+        protected readonly IDateTimeHelper _dateTimeHelper;
+        protected readonly IGiftCardService _giftCardService;
+        protected readonly IHtmlFormatter _htmlFormatter;
+        protected readonly ILanguageService _languageService;
+        protected readonly ILocalizationService _localizationService;
+        protected readonly IMeasureService _measureService;
+        protected readonly INopFileProvider _fileProvider;
+        protected readonly IOrderService _orderService;
+        protected readonly IPaymentPluginManager _paymentPluginManager;
+        protected readonly IPaymentService _paymentService;
+        protected readonly IPictureService _pictureService;
+        protected readonly IPriceFormatter _priceFormatter;
+        protected readonly IProductService _productService;
+        protected readonly IRewardPointService _rewardPointService;
+        protected readonly ISettingService _settingService;
+        protected readonly IShipmentService _shipmentService;
+        protected readonly IStateProvinceService _stateProvinceService;
+        protected readonly IStoreContext _storeContext;
+        protected readonly IStoreService _storeService;
+        protected readonly IVendorService _vendorService;
+        protected readonly IWorkContext _workContext;
+        protected readonly MeasureSettings _measureSettings;
+        protected readonly TaxSettings _taxSettings;
+        protected readonly VendorSettings _vendorSettings;
 
         #endregion
 
@@ -80,8 +76,8 @@ namespace Nop.Services.Common
         public PdfService(AddressSettings addressSettings,
             CatalogSettings catalogSettings,
             CurrencySettings currencySettings,
-            IAddressAttributeFormatter addressAttributeFormatter,
             IAddressService addressService,
+            IAttributeFormatter<AddressAttribute, AddressAttributeValue> addressAttributeFormatter,
             ICountryService countryService,
             ICurrencyService currencyService,
             IDateTimeHelper dateTimeHelper,
@@ -110,11 +106,11 @@ namespace Nop.Services.Common
             VendorSettings vendorSettings)
         {
             _addressSettings = addressSettings;
-            _addressService = addressService;
             _catalogSettings = catalogSettings;
-            _countryService = countryService;
             _currencySettings = currencySettings;
+            _addressService = addressService;
             _addressAttributeFormatter = addressAttributeFormatter;
+            _countryService = countryService;
             _currencyService = currencyService;
             _dateTimeHelper = dateTimeHelper;
             _giftCardService = giftCardService;
@@ -144,7 +140,7 @@ namespace Nop.Services.Common
 
         #endregion
 
-        #region Utils
+        #region Utilities
 
         /// <summary>
         /// Get billing address
@@ -347,8 +343,9 @@ namespace Nop.Services.Common
         /// <param name="order">Order</param>
         /// <param name="orderItems">Collection of order items</param>
         /// <param name="language">Language</param>
+        /// <param name="shipmentItems">Collection of shipment items; when using to prepare shipment items</param>
         /// <returns>A task that contains collection of product entries</returns>
-        protected virtual async Task<List<ProductItem>> GetOrderProductItemsAsync(Order order, IList<OrderItem> orderItems, Language language)
+        protected virtual async Task<List<ProductItem>> GetOrderProductItemsAsync(Order order, IList<OrderItem> orderItems, Language language, IList<ShipmentItem> shipmentItems = null)
         {
             var vendors = _vendorSettings.ShowVendorOnOrderDetailsPage ? await _vendorService.GetVendorsByProductIdsAsync(orderItems.Select(item => item.ProductId).ToArray()) : new List<Vendor>();
 
@@ -399,7 +396,9 @@ namespace Nop.Services.Common
                 productItem.Price = unitPrice;
 
                 //qty
-                productItem.Quantity = oi.Quantity.ToString();
+                productItem.Quantity = shipmentItems is null ?
+                    oi.Quantity.ToString() :
+                    shipmentItems.FirstOrDefault(x => x.OrderItemId == oi.Id).Quantity.ToString();
 
                 //total
                 string subTotal;
@@ -819,7 +818,7 @@ namespace Nop.Services.Common
                 ShipmentNumberText = shipment.Id.ToString(),
                 OrderNumberText = order.CustomOrderNumber,
                 Address = await GetShippingAddressAsync(language, order),
-                Products = await GetOrderProductItemsAsync(order, orderItems, language)
+                Products = await GetOrderProductItemsAsync(order, orderItems, language, shipmentItems)
             };
 
             await using var pdfStream = new MemoryStream();

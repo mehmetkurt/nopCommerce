@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Nop.Core;
+﻿using Nop.Core;
 using Nop.Core.Domain.Topics;
 using Nop.Services.Localization;
 using Nop.Services.Seo;
@@ -17,11 +14,11 @@ namespace Nop.Web.Factories
     {
         #region Fields
 
-        private readonly ILocalizationService _localizationService;
-        private readonly IStoreContext _storeContext;
-        private readonly ITopicService _topicService;
-        private readonly ITopicTemplateService _topicTemplateService;
-        private readonly IUrlRecordService _urlRecordService;
+        protected readonly ILocalizationService _localizationService;
+        protected readonly IStoreContext _storeContext;
+        protected readonly ITopicService _topicService;
+        protected readonly ITopicTemplateService _topicTemplateService;
+        protected readonly IUrlRecordService _urlRecordService;
 
         #endregion
 

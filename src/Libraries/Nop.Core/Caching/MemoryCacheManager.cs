@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
 using Nop.Core.Configuration;
 
@@ -18,16 +15,16 @@ namespace Nop.Core.Caching
         #region Fields
 
         // Flag: Has Dispose already been called?
-        private bool _disposed;
+        protected bool _disposed;
 
-        private readonly IMemoryCache _memoryCache;
+        protected readonly IMemoryCache _memoryCache;
 
         /// <summary>
         /// Holds the keys known by this nopCommerce instance
         /// </summary>
-        private readonly ICacheKeyManager _keyManager;
+        protected readonly ICacheKeyManager _keyManager;
 
-        private static CancellationTokenSource _clearToken = new();
+        protected static CancellationTokenSource _clearToken = new();
 
         #endregion
 
@@ -49,7 +46,7 @@ namespace Nop.Core.Caching
         /// </summary>
         /// <param name="key">Cache key</param>
         /// <returns>Cache entry options</returns>
-        private MemoryCacheEntryOptions PrepareEntryOptions(CacheKey key)
+        protected virtual MemoryCacheEntryOptions PrepareEntryOptions(CacheKey key)
         {
             //set expiration time for the passed cache key
             var options = new MemoryCacheEntryOptions
@@ -65,7 +62,14 @@ namespace Nop.Core.Caching
             return options;
         }
 
-        private void OnEviction(object key, object value, EvictionReason reason, object state)
+        /// <summary>
+        /// The callback method which gets called when a cache entry expires.
+        /// </summary>
+        /// <param name="key">The key of the entry being evicted.</param>
+        /// <param name="value">The value of the entry being evicted.</param>
+        /// <param name="reason">The <see cref="EvictionReason"/>.</param>
+        /// <param name="state">The information that was passed when registering the callback.</param>
+        protected virtual void OnEviction(object key, object value, EvictionReason reason, object state)
         {
             switch (reason)
             {
@@ -115,18 +119,25 @@ namespace Nop.Core.Caching
             if ((key?.CacheTime ?? 0) <= 0)
                 return await acquire();
 
-            var value = _memoryCache.GetOrCreate(
+            var task = _memoryCache.GetOrCreate(
                 key.Key,
                 entry =>
                 {
                     entry.SetOptions(PrepareEntryOptions(key));
                     return new Lazy<Task<T>>(acquire, true);
-                })?.Value;
+                });
 
-            if (value != null)
-                return await value;
+            try
+            {
+                return await task!.Value;
+            }
+            catch
+            {
+                //if a cached function throws an exception, remove it from the cache
+                await RemoveAsync(key);
 
-            return default;
+                throw;
+            }
         }
 
         /// <summary>
@@ -143,7 +154,17 @@ namespace Nop.Core.Caching
         {
             var value = _memoryCache.Get<Lazy<Task<T>>>(key.Key)?.Value;
 
-            return value != null ? await value : defaultValue;
+            try
+            {
+                return value != null ? await value : defaultValue;
+            }
+            catch
+            {
+                //if a cached function throws an exception, remove it from the cache
+                await RemoveAsync(key);
+
+                throw;
+            }
         }
 
         /// <summary>
@@ -159,6 +180,37 @@ namespace Nop.Core.Caching
         public async Task<T> GetAsync<T>(CacheKey key, Func<T> acquire)
         {
             return await GetAsync(key, () => Task.FromResult(acquire()));
+        }
+
+        /// <summary>
+        /// Get a cached item as an <see cref="object"/> instance, or null on a cache miss.
+        /// </summary>
+        /// <param name="key">Cache key</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation
+        /// The task result contains the cached value associated with the specified key, or null if none was found
+        /// </returns>
+        public async Task<object> GetAsync(CacheKey key)
+        {
+            var entry = _memoryCache.Get(key.Key);
+            if (entry == null)
+                return null;
+            try
+            {
+                if (entry.GetType().GetProperty("Value")?.GetValue(entry) is not Task task)
+                    return null;
+
+                await task;
+
+                return task.GetType().GetProperty("Result")!.GetValue(task);
+            }
+            catch
+            {
+                //if a cached function throws an exception, remove it from the cache
+                await RemoveAsync(key);
+
+                throw;
+            }
         }
 
         /// <summary>
@@ -221,7 +273,7 @@ namespace Nop.Core.Caching
             if (disposing)
                 // don't dispose of the MemoryCache, as it is injected
                 _clearToken.Dispose();
-            
+
             _disposed = true;
         }
 

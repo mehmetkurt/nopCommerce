@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
 namespace Nop.Core.Http.Extensions
@@ -68,7 +67,7 @@ namespace Nop.Core.Http.Extensions
         /// </summary>
         /// <param name="session">Session</param>
         /// <returns>A task that represents the asynchronous operation</returns>
-        private static async Task LoadAsync(ISession session)
+        public static async Task LoadAsync(ISession session)
         {
             try
             {

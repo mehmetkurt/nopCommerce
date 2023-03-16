@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Xml;
+﻿using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.AspNetCore.Http;
 using Nop.Core;
@@ -22,12 +17,12 @@ namespace Nop.Services.Payments
     {
         #region Fields
 
-        private readonly ICustomerService _customerService;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IPaymentPluginManager _paymentPluginManager;
-        private readonly IPriceCalculationService _priceCalculationService;
-        private readonly PaymentSettings _paymentSettings;
-        private readonly ShoppingCartSettings _shoppingCartSettings;
+        protected readonly ICustomerService _customerService;
+        protected readonly IHttpContextAccessor _httpContextAccessor;
+        protected readonly IPaymentPluginManager _paymentPluginManager;
+        protected readonly IPriceCalculationService _priceCalculationService;
+        protected readonly PaymentSettings _paymentSettings;
+        protected readonly ShoppingCartSettings _shoppingCartSettings;
 
         #endregion
 
@@ -369,7 +364,7 @@ namespace Nop.Services.Payments
 
             return maskedChars + last4;
         }
-        
+
         /// <summary>
         /// Serialize CustomValues of ProcessPaymentRequest
         /// </summary>

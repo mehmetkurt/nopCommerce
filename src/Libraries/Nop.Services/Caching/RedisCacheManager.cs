@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System.Net;
 using Microsoft.Extensions.Caching.Distributed;
 using Nop.Core.Caching;
 using Nop.Core.Configuration;
@@ -16,7 +13,7 @@ namespace Nop.Services.Caching
     {
         #region Fields
 
-        private readonly IRedisConnectionWrapper _connectionWrapper;
+        protected readonly IRedisConnectionWrapper _connectionWrapper;
 
         #endregion
 

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Nop.Core;
+﻿using Nop.Core;
 using Nop.Core.Caching;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Customers;
@@ -23,17 +19,17 @@ namespace Nop.Services.Catalog
     {
         #region Fields
 
-        private readonly IAclService _aclService;
-        private readonly ICustomerService _customerService;
-        private readonly ILocalizationService _localizationService;
-        private readonly IRepository<Category> _categoryRepository;
-        private readonly IRepository<DiscountCategoryMapping> _discountCategoryMappingRepository;
-        private readonly IRepository<Product> _productRepository;
-        private readonly IRepository<ProductCategory> _productCategoryRepository;
-        private readonly IStaticCacheManager _staticCacheManager;
-        private readonly IStoreContext _storeContext;
-        private readonly IStoreMappingService _storeMappingService;
-        private readonly IWorkContext _workContext;
+        protected readonly IAclService _aclService;
+        protected readonly ICustomerService _customerService;
+        protected readonly ILocalizationService _localizationService;
+        protected readonly IRepository<Category> _categoryRepository;
+        protected readonly IRepository<DiscountCategoryMapping> _discountCategoryMappingRepository;
+        protected readonly IRepository<Product> _productRepository;
+        protected readonly IRepository<ProductCategory> _productCategoryRepository;
+        protected readonly IStaticCacheManager _staticCacheManager;
+        protected readonly IStoreContext _storeContext;
+        protected readonly IStoreMappingService _storeMappingService;
+        protected readonly IWorkContext _workContext;
 
         #endregion
 
@@ -86,6 +82,7 @@ namespace Nop.Services.Catalog
                 return new List<ProductCategory>();
 
             var customer = await _workContext.GetCurrentCustomerAsync();
+            var customerRoleIds = await _customerService.GetCustomerRoleIdsAsync(customer);
 
             return await _productCategoryRepository.GetAllAsync(async query =>
             {
@@ -97,7 +94,7 @@ namespace Nop.Services.Catalog
                     categoriesQuery = await _storeMappingService.ApplyStoreMapping(categoriesQuery, storeId);
 
                     //apply ACL constraints
-                    categoriesQuery = await _aclService.ApplyAcl(categoriesQuery, customer);
+                    categoriesQuery = await _aclService.ApplyAcl(categoriesQuery, customerRoleIds);
 
                     query = query.Where(pc => categoriesQuery.Any(c => !c.Deleted && c.Id == pc.CategoryId));
                 }
@@ -108,7 +105,7 @@ namespace Nop.Services.Catalog
                     .ThenBy(pc => pc.Id);
 
             }, cache => _staticCacheManager.PrepareKeyForDefaultCache(NopCatalogDefaults.ProductCategoriesByProductCacheKey,
-                productId, showHidden, customer, storeId));
+                productId, showHidden, customerRoleIds, storeId));
         }
 
         /// <summary>
@@ -285,6 +282,8 @@ namespace Nop.Services.Catalog
         {
             var store = await _storeContext.GetCurrentStoreAsync();
             var customer = await _workContext.GetCurrentCustomerAsync();
+            var customerRoleIds = await _customerService.GetCustomerRoleIdsAsync(customer);
+
             var categories = await _categoryRepository.GetAllAsync(async query =>
             {
                 if (!showHidden)
@@ -295,14 +294,14 @@ namespace Nop.Services.Catalog
                     query = await _storeMappingService.ApplyStoreMapping(query, store.Id);
 
                     //apply ACL constraints
-                    query = await _aclService.ApplyAcl(query, customer);
+                    query = await _aclService.ApplyAcl(query, customerRoleIds);
                 }
 
                 query = query.Where(c => !c.Deleted && c.ParentCategoryId == parentCategoryId);
 
                 return query.OrderBy(c => c.DisplayOrder).ThenBy(c => c.Id);
             }, cache => cache.PrepareKeyForDefaultCache(NopCatalogDefaults.CategoriesByParentCategoryCacheKey,
-                parentCategoryId, showHidden, customer, store));
+                parentCategoryId, showHidden, customerRoleIds, store));
 
             return categories;
         }

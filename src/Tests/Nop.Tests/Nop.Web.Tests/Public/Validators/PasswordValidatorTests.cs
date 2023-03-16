@@ -50,6 +50,7 @@ namespace Nop.Tests.Nop.Web.Tests.Public.Validators
             var cs = new CustomerSettings
             {
                 PasswordMinLength = 3,
+                PasswordMaxLength = 32,
                 PasswordRequireLowercase = true
             };
 
@@ -72,7 +73,8 @@ namespace Nop.Tests.Nop.Web.Tests.Public.Validators
             var cs = new CustomerSettings
             {
                 PasswordMinLength = 3,
-                PasswordRequireUppercase = true                
+                PasswordMaxLength = 32,
+                PasswordRequireUppercase = true
             };
 
             validator.RuleFor(x => x.Password).IsPassword(_localizationService, cs);
@@ -94,6 +96,7 @@ namespace Nop.Tests.Nop.Web.Tests.Public.Validators
             var cs = new CustomerSettings
             {
                 PasswordMinLength = 3,
+                PasswordMaxLength = 32,
                 PasswordRequireDigit = true
             };
 
@@ -116,11 +119,12 @@ namespace Nop.Tests.Nop.Web.Tests.Public.Validators
             var cs = new CustomerSettings
             {
                 PasswordMinLength = 3,
+                PasswordMaxLength = 32,
                 PasswordRequireNonAlphanumeric = true
             };
 
             validator.RuleFor(x => x.Password).IsPassword(_localizationService, cs);
-            
+
             //ShouldHaveValidationError
             _person.Password = "nop";
             validator.TestValidate(_person).ShouldHaveValidationErrorFor(x => x.Password);
@@ -164,12 +168,12 @@ namespace Nop.Tests.Nop.Web.Tests.Public.Validators
 
             //ShouldNotHaveValidationError
             _person.Password = "nopCommerce123$";
-            validator.TestValidate(_person).ShouldNotHaveValidationErrorFor(x => x.Password);            
+            validator.TestValidate(_person).ShouldNotHaveValidationErrorFor(x => x.Password);
         }
-        
+
         [Test]
         public void ShouldValidateOnChangePasswordModelIsAllRule()
-        {            
+        {
             var model = new ChangePasswordModel
             {
                 NewPassword = "1234"
@@ -185,7 +189,7 @@ namespace Nop.Tests.Nop.Web.Tests.Public.Validators
 
         [Test]
         public void ShouldValidateOnPasswordRecoveryConfirmModelIsAllRule()
-        {            
+        {
             var model = new PasswordRecoveryConfirmModel
             {
                 NewPassword = "1234"
@@ -201,7 +205,7 @@ namespace Nop.Tests.Nop.Web.Tests.Public.Validators
 
         [Test]
         public void ShouldValidateOnRegisterModelIsAllRule()
-        {   
+        {
             var model = new RegisterModel
             {
                 Password = "1234"
@@ -213,6 +217,6 @@ namespace Nop.Tests.Nop.Web.Tests.Public.Validators
             //we know that password should equal confirmation password
             model.ConfirmPassword = model.Password;
             _registerValidator.TestValidate(model).ShouldNotHaveValidationErrorFor(x => x.Password);
-        }        
+        }
     }
 }

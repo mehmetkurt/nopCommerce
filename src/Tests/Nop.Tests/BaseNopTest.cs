@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Resources;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using FluentMigrator;
 using FluentMigrator.Runner;
@@ -41,6 +35,7 @@ using Nop.Data.Configuration;
 using Nop.Data.Mapping;
 using Nop.Data.Migrations;
 using Nop.Services.Affiliates;
+using Nop.Services.Attributes;
 using Nop.Services.Authentication.External;
 using Nop.Services.Authentication.MultiFactor;
 using Nop.Services.Blogs;
@@ -265,9 +260,9 @@ namespace Nop.Tests
 
             var memoryDistributedCache = new MemoryDistributedCache(new TestMemoryDistributedCacheoptions());
             services.AddSingleton<IDistributedCache>(memoryDistributedCache);
-            services.AddTransient<MemoryDistributedCacheManager>();
+            services.AddScoped<MemoryDistributedCacheManager>();
             services.AddSingleton(new DistributedCacheLocker(memoryDistributedCache));
-            
+
             //services
             services.AddTransient<IBackInStockSubscriptionService, BackInStockSubscriptionService>();
             services.AddTransient<ICategoryService, CategoryService>();
@@ -286,21 +281,22 @@ namespace Nop.Tests
             services.AddTransient<IManufacturerTemplateService, ManufacturerTemplateService>();
             services.AddTransient<ITopicTemplateService, TopicTemplateService>();
             services.AddTransient<IProductTagService, ProductTagService>();
-            services.AddTransient<IAddressAttributeFormatter, AddressAttributeFormatter>();
-            services.AddTransient<IAddressAttributeParser, AddressAttributeParser>();
-            services.AddTransient<IAddressAttributeService, AddressAttributeService>();
             services.AddTransient<IAddressService, AddressService>();
             services.AddTransient<IAffiliateService, AffiliateService>();
             services.AddTransient<IVendorService, VendorService>();
-            services.AddTransient<IVendorAttributeFormatter, VendorAttributeFormatter>();
-            services.AddTransient<IVendorAttributeParser, VendorAttributeParser>();
-            services.AddTransient<IVendorAttributeService, VendorAttributeService>();
+
+            //attribute services
+            services.AddScoped(typeof(IAttributeService<,>), typeof(AttributeService<,>));
+
+            //attribute parsers
+            services.AddScoped(typeof(IAttributeParser<,>), typeof(AttributeParser<,>));
+
+            //attribute formatter
+            services.AddScoped(typeof(IAttributeFormatter<,>), typeof(AttributeFormatter<,>));
+
             services.AddTransient<ISearchTermService, SearchTermService>();
             services.AddTransient<IGenericAttributeService, GenericAttributeService>();
             services.AddTransient<IMaintenanceService, MaintenanceService>();
-            services.AddTransient<ICustomerAttributeFormatter, CustomerAttributeFormatter>();
-            services.AddTransient<ICustomerAttributeParser, CustomerAttributeParser>();
-            services.AddTransient<ICustomerAttributeService, CustomerAttributeService>();
             services.AddTransient<ICustomerService, CustomerService>();
             services.AddTransient<ICustomerRegistrationService, CustomerRegistrationService>();
             services.AddTransient<ICustomerReportService, CustomerReportService>();
@@ -333,8 +329,6 @@ namespace Nop.Tests
             services.AddTransient<ISmtpBuilder, TestSmtpBuilder>();
             services.AddTransient<IEmailSender, EmailSender>();
             services.AddTransient<ICheckoutAttributeFormatter, CheckoutAttributeFormatter>();
-            services.AddTransient<ICheckoutAttributeParser, CheckoutAttributeParser>();
-            services.AddTransient<ICheckoutAttributeService, CheckoutAttributeService>();
             services.AddTransient<IGiftCardService, GiftCardService>();
             services.AddTransient<IOrderService, OrderService>();
             services.AddTransient<IOrderReportService, OrderReportService>();

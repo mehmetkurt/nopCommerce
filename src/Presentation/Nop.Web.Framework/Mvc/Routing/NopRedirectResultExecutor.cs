@@ -1,6 +1,4 @@
-﻿using System;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -17,17 +15,17 @@ namespace Nop.Web.Framework.Mvc.Routing
     {
         #region Fields
 
-        private readonly IActionContextAccessor _actionContextAccessor;
-        private readonly IUrlHelperFactory _urlHelperFactory;
-        private readonly SecuritySettings _securitySettings;
-        private readonly IWebHelper _webHelper;
+        protected readonly IActionContextAccessor _actionContextAccessor;
+        protected readonly IUrlHelperFactory _urlHelperFactory;
+        protected readonly SecuritySettings _securitySettings;
+        protected readonly IWebHelper _webHelper;
 
         #endregion
 
         #region Ctor
 
         public NopRedirectResultExecutor(IActionContextAccessor actionContextAccessor,
-            ILoggerFactory loggerFactory, 
+            ILoggerFactory loggerFactory,
             IUrlHelperFactory urlHelperFactory,
             SecuritySettings securitySettings,
             IWebHelper webHelper) : base(loggerFactory, urlHelperFactory)
