@@ -3050,7 +3050,8 @@ namespace Nop.Services.Installation
                 DeleteGuestTaskOlderThanMinutes = 1440,
                 PhoneNumberValidationEnabled = false,
                 PhoneNumberValidationUseRegex = false,
-                PhoneNumberValidationRule = "^[0-9]{1,14}?$"
+                PhoneNumberValidationRule = "^[0-9]{1,14}?$",
+                DefaultCountryId = _countryRepository.Table.FirstOrDefault(c => c.ThreeLetterIsoCode == regionInfo.ThreeLetterISORegionName)?.Id
             });
 
             await settingService.SaveSettingAsync(new MultiFactorAuthenticationSettings
@@ -3074,7 +3075,8 @@ namespace Nop.Services.Installation
                 StateProvinceEnabled = true,
                 PhoneEnabled = true,
                 PhoneRequired = true,
-                FaxEnabled = true
+                FaxEnabled = true,
+                DefaultCountryId = _countryRepository.Table.FirstOrDefault(c => c.ThreeLetterIsoCode == regionInfo.ThreeLetterISORegionName)?.Id
             });
 
             await settingService.SaveSettingAsync(new MediaSettings
@@ -3244,7 +3246,8 @@ namespace Nop.Services.Installation
                 HoneypotEnabled = false,
                 HoneypotInputName = "hpinput",
                 AllowNonAsciiCharactersInHeaders = true,
-                UseAesEncryptionAlgorithm = true
+                UseAesEncryptionAlgorithm = true,
+                AllowStoreOwnerExportImportCustomersWithHashedPassword = true
             });
 
             await settingService.SaveSettingAsync(new ShippingSettings
@@ -3270,7 +3273,7 @@ namespace Nop.Services.Installation
                 BypassShippingMethodSelectionIfOnlyOne = false,
                 UseCubeRootMethod = true,
                 ConsiderAssociatedProductsDimensions = true,
-                ShipSeparatelyOneItemEach = true,
+                ShipSeparatelyOneItemEach = false,
                 RequestDelay = 300,
                 ShippingSorting = ShippingSortingEnum.Position,
             });
@@ -8904,6 +8907,12 @@ namespace Nop.Services.Installation
                     SystemKeyword = "ImportProducts",
                     Enabled = true,
                     Name = "Products were imported"
+                },
+                new ActivityLogType
+                {
+                    SystemKeyword = "ImportCustomers",
+                    Enabled = true,
+                    Name = "Customers were imported"
                 },
                 new ActivityLogType
                 {

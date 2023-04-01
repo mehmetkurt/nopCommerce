@@ -33,6 +33,7 @@ namespace Nop.Tests.Nop.Services.Tests.ExportImport
     {
         #region Fields
 
+        private CustomerSettings _customerSettings;
         private CatalogSettings _catalogSettings;
         private IAddressService _addressService;
         private ICategoryService _categoryService;
@@ -56,6 +57,7 @@ namespace Nop.Tests.Nop.Services.Tests.ExportImport
         [OneTimeSetUp]
         public async Task SetUp()
         {
+            _customerSettings = GetService<CustomerSettings>();
             _catalogSettings = GetService<CatalogSettings>();
             _addressService = GetService<IAddressService>();
             _categoryService = GetService<ICategoryService>();
@@ -117,25 +119,44 @@ namespace Nop.Tests.Nop.Services.Tests.ExportImport
                     continue;
 
                 var objectPropertyValue = objectProperty.GetValue(actual);
+                var propertyValue = property.PropertyValue;
 
-                if (objectProperty.PropertyType == typeof(Guid))
-                    objectPropertyValue = objectPropertyValue.ToString();
+                if (propertyValue is XLCellValue { IsBlank: true }) 
+                    propertyValue = null;
 
-                if (objectProperty.PropertyType == typeof(string))
-                    objectPropertyValue = (property.PropertyValue?.ToString() == string.Empty && objectPropertyValue == null) ? string.Empty : objectPropertyValue;
+                switch (objectPropertyValue)
+                {
+                    case int:
+                        propertyValue = property.IntValue;
+                        break;
+                    case Guid:
+                        propertyValue = property.GuidValue;
+                        break;
+                    case string:
+                        propertyValue = property.StringValue;
+                        break;
+                    case DateTime time: ;
+                        objectPropertyValue = new DateTime(time.Year, time.Month, time.Day, time.Hour, time.Minute, time.Second);
+                        if (DateTime.TryParse(property.StringValue, out var date))
+                            propertyValue = date;
+                        else
+                            propertyValue = null;
+                        break;
+                    case bool:
+                        propertyValue = property.BooleanValue;
+                        break;
+                    case decimal:
+                        propertyValue = property.DecimalValue;
+                        break;
+                }   
 
                 if (objectProperty.PropertyType.IsEnum)
+                {
                     objectPropertyValue = (int)objectPropertyValue;
+                    propertyValue = property.IntValue;
+                }
 
-                //https://github.com/ClosedXML/ClosedXML/blob/develop/ClosedXML/Extensions/ObjectExtensions.cs#L61
-                if (objectProperty.PropertyType == typeof(DateTime))
-                    objectPropertyValue = DateTime.FromOADate(double.Parse(((DateTime)objectPropertyValue).ToOADate().ToString("G15", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture));
-
-                if (objectProperty.PropertyType == typeof(DateTime?))
-                    objectPropertyValue = objectPropertyValue != null ? DateTime.FromOADate(double.Parse(((DateTime?)objectPropertyValue)?.ToOADate().ToString("G15", CultureInfo.InvariantCulture))) : null;
-
-                //https://github.com/ClosedXML/ClosedXML/issues/544
-                property.PropertyValue.Should().Be(objectPropertyValue ?? "", $"The property \"{typeof(T).Name}.{property.PropertyName}\" of these objects is not equal");
+                propertyValue.Should().Be(objectPropertyValue, $"The property \"{typeof(T).Name}.{property.PropertyName}\" of these objects is not equal");
             }
 
             return actual;
@@ -261,14 +282,14 @@ namespace Nop.Tests.Nop.Services.Tests.ExportImport
             PropertiesShouldEqual(testBillingAddress, manager, replacePairs, "CreatedOnUtc", "BillingCountry");
 
             var country = await _countryService.GetCountryByAddressAsync(testBillingAddress);
-            manager.GetDefaultProperties.First(p => p.PropertyName == "BillingCountry").PropertyValue.Should().Be(country.Name);
+            manager.GetDefaultProperties.First(p => p.PropertyName == "BillingCountry").StringValue.Should().Be(country.Name);
 
             const string shippingPattern = "Shipping";
             replacePairs = addressFields.ToDictionary(p => shippingPattern + p, p => p);
             var testShippingAddress = await _addressService.GetAddressByIdAsync(order.ShippingAddressId ?? 0);
             PropertiesShouldEqual(testShippingAddress, manager, replacePairs, "CreatedOnUtc", "ShippingCountry");
             country = await _countryService.GetCountryByAddressAsync(testShippingAddress);
-            manager.GetDefaultProperties.First(p => p.PropertyName == "ShippingCountry").PropertyValue.Should().Be(country.Name);
+            manager.GetDefaultProperties.First(p => p.PropertyName == "ShippingCountry").StringValue.Should().Be(country.Name);
         }
 
         [Test]
@@ -300,11 +321,6 @@ namespace Nop.Tests.Nop.Services.Tests.ExportImport
         [Test]
         public async Task CanExportCustomersToXlsx()
         {
-            var replacePairs = new Dictionary<string, string>
-            {
-                { "VatNumberStatus", "VatNumberStatusId" }
-            };
-
             var customers = await _customerService.GetAllCustomersAsync();
 
             var excelData = await _exportManager.ExportCustomersToXlsxAsync(customers);
@@ -320,19 +336,58 @@ namespace Nop.Tests.Nop.Services.Tests.ExportImport
             manager.SetSelectList("VatNumberStatus", await VatNumberStatus.Unknown.ToSelectListAsync(useLocalization: false));
 
             var customer = customers.First();
-
-            var ignore = new List<string> { "Id", "ExternalAuthenticationRecords", "CustomerRoles", "ShoppingCartItems",
+            
+            var ignore = new List<string> { "Id", "ExternalAuthenticationRecords", "ShoppingCartItems",
                 "ReturnRequests", "BillingAddress", "ShippingAddress", "Addresses", "AdminComment",
                 "EmailToRevalidate", "HasShoppingCartItems", "RequireReLogin", "FailedLoginAttempts",
                 "CannotLoginUntilDateUtc", "Deleted", "IsSystemAccount", "SystemName", "LastIpAddress",
                 "LastLoginDateUtc", "LastActivityDateUtc", "RegisteredInStoreId", "BillingAddressId", "ShippingAddressId",
                 "CustomerCustomerRoleMappings", "CustomerAddressMappings", "EntityCacheKey", "VendorId",
-                "DateOfBirth", "StreetAddress", "StreetAddress2", "ZipPostalCode", "City", "County", "CountryId",
-                "StateProvinceId", "Phone", "Fax", "VatNumberStatusId", "TimeZoneId", "CustomCustomerAttributesXML",
+                "DateOfBirth", "CountryId",
+                "StateProvinceId", "VatNumberStatusId", "TimeZoneId",
                 "CurrencyId", "LanguageId", "TaxDisplayTypeId", "TaxDisplayType", "TaxDisplayType", "VatNumberStatusId" };
 
+            if (!_customerSettings.FirstNameEnabled) 
+                ignore.Add("FirstName");
+            
+            if (!_customerSettings.LastNameEnabled)
+                ignore.Add("LastName");
+
+            if (!_customerSettings.GenderEnabled)
+                ignore.Add("Gender");
+
+            if (!_customerSettings.CompanyEnabled)
+                ignore.Add("Company");
+
+            if (!_customerSettings.StreetAddressEnabled)
+                ignore.Add("StreetAddress");
+
+            if (!_customerSettings.StreetAddress2Enabled)
+                ignore.Add("StreetAddress2");
+
+            if (!_customerSettings.ZipPostalCodeEnabled)
+                ignore.Add("ZipPostalCode");
+
+            if (!_customerSettings.CityEnabled)
+                ignore.Add("City");
+
+            if (!_customerSettings.CountyEnabled)
+                ignore.Add("County");
+
+            if (!_customerSettings.CountryEnabled)
+                ignore.Add("Country");
+
+            if(!_customerSettings.StateProvinceEnabled)
+                ignore.Add("StateProvince");
+
+            if(!_customerSettings.PhoneEnabled)
+                ignore.Add("Phone");
+
+            if(!_customerSettings.FaxEnabled)
+                ignore.Add("Fax");
+
             AreAllObjectPropertiesPresent(customer, manager, ignore.ToArray());
-            PropertiesShouldEqual(customer, manager, replacePairs);
+            PropertiesShouldEqual(customer, manager, new Dictionary<string, string>());
         }
 
         [Test]

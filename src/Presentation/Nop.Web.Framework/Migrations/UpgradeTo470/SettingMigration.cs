@@ -1,4 +1,5 @@
 ﻿using FluentMigrator;
+using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Security;
 using Nop.Core.Infrastructure;
@@ -21,11 +22,16 @@ namespace Nop.Web.Framework.Migrations.UpgradeTo470
             var settingService = EngineContext.Current.Resolve<ISettingService>();
 
             var customerSettings = settingService.LoadSetting<CustomerSettings>();
-
             if (!settingService.SettingExists(customerSettings, settings => settings.PasswordMaxLength))
             {
                 customerSettings.PasswordMaxLength = 64;
                 settingService.SaveSetting(customerSettings, settings => settings.PasswordMaxLength);
+            }
+
+            if (!settingService.SettingExists(customerSettings, settings => settings.DefaultCountryId))
+            {
+                customerSettings.DefaultCountryId = null;
+                settingService.SaveSetting(customerSettings, settings => settings.DefaultCountryId);
             }
 
             var securitySettings = settingService.LoadSetting<SecuritySettings>();
@@ -33,6 +39,19 @@ namespace Nop.Web.Framework.Migrations.UpgradeTo470
             {
                 securitySettings.UseAesEncryptionAlgorithm = false;
                 settingService.SaveSetting(securitySettings, settings => settings.UseAesEncryptionAlgorithm);
+            }
+
+            if (!settingService.SettingExists(securitySettings, settings => settings.AllowStoreOwnerExportImportCustomersWithHashedPassword))
+            {
+                securitySettings.AllowStoreOwnerExportImportCustomersWithHashedPassword = true;
+                settingService.SaveSetting(securitySettings, settings => settings.AllowStoreOwnerExportImportCustomersWithHashedPassword);
+            }
+
+            var addressSettings = settingService.LoadSetting<AddressSettings>();
+            if (!settingService.SettingExists(addressSettings, settings => settings.DefaultCountryId))
+            {
+                addressSettings.DefaultCountryId = null;
+                settingService.SaveSetting(addressSettings, settings => settings.DefaultCountryId);
             }
         }
 

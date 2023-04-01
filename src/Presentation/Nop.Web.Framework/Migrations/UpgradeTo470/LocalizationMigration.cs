@@ -97,6 +97,7 @@ namespace Nop.Web.Framework.Migrations.UpgradeTo470
                 ["Admin.ConfigurationSteps.PaymentPayPal.Configured.Text"] = "These settings are different from the basic ones, you have already configured the PayPal Commerce plugin!",
                 //6567
                 ["Admin.Configuration.Settings.Catalog.DisplayAllPicturesOnCatalogPages.Hint"] = "When enabled, customers will see a slider at the bottom of each picture block. It'll be visible only when a product has more than one picture.",
+
                 //6555
                 ["Admin.Configuration.AppSettings.Hosting.KnownNetworks"] = "Addresses of known proxy networks",
                 ["Admin.Configuration.AppSettings.Hosting.KnownNetworks.Hint"] = "Specify a list of IP CIDR notations (comma separated) to accept forwarded headers. e.g. 172.64.0.0/13,162.158.0.0/15",
@@ -105,7 +106,18 @@ namespace Nop.Web.Framework.Migrations.UpgradeTo470
                 //6167
                 ["Admin.ContentManagement.MessageTemplates.Fields.AllowDirectReply"] = "Allow Direct Reply",
                 ["Admin.ContentManagement.MessageTemplates.Fields.AllowDirectReply.Hint"] = "When checked, the store owner can reply directly to the customer's email address from mailbox when a customer-related message is received.",
+                //5023
+                ["Header.SkipNavigation.Text"] = "Skip Navigation",
+                //6640
+                ["Admin.Configuration.Settings.CustomerUser.AddressFormFields.DefaultCountry"] = "Default Country",
+                ["Admin.Configuration.Settings.CustomerUser.AddressFormFields.DefaultCountry.Hint"] = "Select the default country for address form fields. This can speed up the checkout process.",
+                ["Admin.Configuration.Settings.CustomerUser.DefaultCountry"] = "Default Country",
+                ["Admin.Configuration.Settings.CustomerUser.DefaultCountry.Hint"] = "Select the default country for customer form fields. This can speed up the registration process.",
 
+                //5312
+                ["Admin.Customers.Customers.Imported"] = "Customers have been imported successfully.",
+                ["Admin.Customers.Customers.ImportFromExcelTip"] = "Imported customers are distinguished by customer GUID. If the customer GUID already exists, then its details will be updated. If GUID not exists we try to use email address as an identifier. You may leave customer GUID empty to new customers.",
+                ["ActivityLog.ImportCustomers"] = "{0} customers were imported",
             }, languageId);
 
             #endregion
