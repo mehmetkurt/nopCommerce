@@ -7,7 +7,7 @@ using Nop.Web.Framework.Extensions;
 
 namespace Nop.Web.Framework.Migrations.UpgradeTo460
 {
-    [NopUpdateMigration("2022-07-20 00:01:00", "4.60.0", UpdateMigrationType.Localization)]
+    [NopUpdateMigration("2022-07-20 00:02:00", "4.60.0", UpdateMigrationType.Localization)]
     public class LocalizationMigration : MigrationBase
     {
         /// <summary>Collect the UP migration expressions</summary>
@@ -42,7 +42,7 @@ namespace Nop.Web.Framework.Migrations.UpgradeTo460
 
                 "Admin.Configuration.AppSettings.Common.SupportPreviousNopcommerceVersions",
                 "Admin.Configuration.AppSettings.Common.SupportPreviousNopcommerceVersions.Hint",
-
+            
 				//4622
                 "PDFInvoice.OrderDate",
                 "PDFInvoice.Company",
@@ -329,6 +329,9 @@ namespace Nop.Web.Framework.Migrations.UpgradeTo460
 
                 //6669
                 ["Admin.Catalog.Products.SpecificationAttributes.NameFormat"] = "{0} >> {1}",
+
+                //#6676
+                ["RewardPoints.Expired"] = "Unused reward points from {0} have expired",
             }, languageId);
 
             #endregion

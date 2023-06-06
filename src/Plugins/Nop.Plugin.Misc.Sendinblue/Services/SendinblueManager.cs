@@ -478,13 +478,19 @@ namespace Nop.Plugin.Misc.Sendinblue.Services
                     return;
                 }
 
-                //get all contacts of the list
-                var contacts = await client.GetContactsFromListAsync(listId);
-
-                //whether subscribed contact already in the list
-                var template = new { contacts = new[] { new { email = string.Empty, attributes = new Dictionary<string, string>() } } };
-                var contactObjects = JsonConvert.DeserializeAnonymousType(contacts.ToJson(), template);
-                var contactObject = contactObjects?.contacts?.FirstOrDefault(contact => contact.email == subscription.Email.ToLowerInvariant());
+                GetExtendedContactDetails contactObject = null;
+                try
+                {
+                    contactObject = await client.GetContactInfoAsync(subscription.Email);
+                }
+                catch (ApiException apiException)
+                {
+                    if (apiException.ErrorCode != 404)
+                    {                        
+                        await _logger.ErrorAsync($"Sendinblue error: {apiException.Message}.", apiException, await _workContext.GetCurrentCustomerAsync());
+                        return;
+                    }
+                }
 
                 //prepare attributes
                 var firstName = string.Empty;
@@ -745,9 +751,28 @@ namespace Nop.Plugin.Misc.Sendinblue.Services
                     throw new ArgumentNullException(nameof(order));
 
                 var customer = await _customerService.GetCustomerByIdAsync(order.CustomerId);
+                if (customer.Email is null)
+                    return;
 
                 //create API client
                 var client = await CreateApiClientAsync(config => new ContactsApi(config));
+
+                try
+                {
+                    var contactInfo = await client.GetContactInfoAsync(customer.Email);
+                }
+                catch (ApiException apiException)
+                {
+                    if (apiException.ErrorCode == 404)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        await _logger.ErrorAsync($"Sendinblue error: {apiException.Message}.", apiException, await _workContext.GetCurrentCustomerAsync());
+                        return;
+                    }
+                }
 
                 //update contact
                 var attributes = new Dictionary<string, string>
@@ -759,6 +784,7 @@ namespace Nop.Plugin.Misc.Sendinblue.Services
                 };
                 var updateContact = new UpdateContact { Attributes = attributes };
                 await client.UpdateContactAsync(customer.Email, updateContact);
+
             }
             catch (Exception exception)
             {
