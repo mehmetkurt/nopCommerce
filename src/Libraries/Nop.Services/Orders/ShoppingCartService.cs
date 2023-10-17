@@ -603,8 +603,12 @@ namespace Nop.Services.Orders
             await _sciRepository.DeleteAsync(shoppingCartItem);
 
             //reset "HasShoppingCartItems" property used for performance optimization
-            customer.HasShoppingCartItems = !IsCustomerShoppingCartEmpty(customer);
-            await _customerService.UpdateCustomerAsync(customer);
+            var hasShoppingCartItems = !IsCustomerShoppingCartEmpty(customer);
+            if (hasShoppingCartItems != customer.HasShoppingCartItems)
+            {
+                customer.HasShoppingCartItems = hasShoppingCartItems;
+                await _customerService.UpdateCustomerAsync(customer);
+            }
 
             //validate checkout attributes
             if (ensureOnlyActiveCheckoutAttributes &&
@@ -665,8 +669,12 @@ namespace Nop.Services.Orders
             await _eventPublisher.PublishAsync(new ClearShoppingCartEvent(cart));
 
             //reset "HasShoppingCartItems" property used for performance optimization
-            customer.HasShoppingCartItems = !IsCustomerShoppingCartEmpty(customer);
-            await _customerService.UpdateCustomerAsync(customer);
+            var hasShoppingCartItems = !IsCustomerShoppingCartEmpty(customer);
+            if (hasShoppingCartItems != customer.HasShoppingCartItems)
+            {
+                customer.HasShoppingCartItems = hasShoppingCartItems;
+                await _customerService.UpdateCustomerAsync(customer);
+            }
         }
 
         /// <summary>
@@ -1679,9 +1687,12 @@ namespace Nop.Services.Orders
                 await _sciRepository.InsertAsync(shoppingCartItem);
 
                 //updated "HasShoppingCartItems" property used for performance optimization
-                customer.HasShoppingCartItems = !IsCustomerShoppingCartEmpty(customer);
-
-                await _customerService.UpdateCustomerAsync(customer);
+                var hasShoppingCartItems = !IsCustomerShoppingCartEmpty(customer);
+                if (hasShoppingCartItems != customer.HasShoppingCartItems)
+                {
+                    customer.HasShoppingCartItems = hasShoppingCartItems;
+                    await _customerService.UpdateCustomerAsync(customer);
+                }
             }
 
             return warnings;
@@ -1782,7 +1793,6 @@ namespace Nop.Services.Orders
                 shoppingCartItem.UpdatedOnUtc = DateTime.UtcNow;
 
                 await _sciRepository.UpdateAsync(shoppingCartItem);
-                await _customerService.UpdateCustomerAsync(customer);
             }
             else
             {
@@ -1845,9 +1855,6 @@ namespace Nop.Services.Orders
                 //gift card
                 foreach (var code in await _customerService.ParseAppliedGiftCardCouponCodesAsync(fromCustomer))
                     await _customerService.ApplyGiftCardCouponCodeAsync(toCustomer, code);
-
-                //save customer
-                await _customerService.UpdateCustomerAsync(toCustomer);
             }
 
             //move selected checkout attributes
@@ -1906,18 +1913,14 @@ namespace Nop.Services.Orders
             RecurringProductCyclePeriod? cyclePeriod = null;
             int? totalCycles = null;
 
+            var conflictError = await _localizationService.GetResourceAsync("ShoppingCart.ConflictingShipmentSchedules");
+
             foreach (var sci in shoppingCart)
             {
-                var product = await _productService.GetProductByIdAsync(sci.ProductId);
-                if (product == null)
-                {
-                    throw new NopException($"Product (Id={sci.ProductId}) cannot be loaded");
-                }
+                var product = await _productService.GetProductByIdAsync(sci.ProductId) ?? throw new NopException($"Product (Id={sci.ProductId}) cannot be loaded");
 
                 if (!product.IsRecurring)
                     continue;
-
-                var conflictError = await _localizationService.GetResourceAsync("ShoppingCart.ConflictingShipmentSchedules");
 
                 //cycle length
                 if (cycleLength.HasValue && cycleLength.Value != product.RecurringCycleLength)
