@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using System.Text.RegularExpressions;
-using Nop.Core.Caching;
 using Nop.Core.Domain.Common;
 using Nop.Data;
 using Nop.Services.Attributes;
@@ -109,8 +108,7 @@ namespace Nop.Services.Common
         /// </returns>
         public virtual async Task<Address> GetAddressByIdAsync(int addressId)
         {
-            return await _addressRepository.GetByIdAsync(addressId,
-                cache => cache.PrepareKeyForShortTermCache(NopEntityCacheDefaults<Address>.ByIdCacheKey, addressId));
+            return await _addressRepository.GetByIdAsync(addressId, cache => default, useShortTermCache: true);
         }
 
         /// <summary>

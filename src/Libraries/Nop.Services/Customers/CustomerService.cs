@@ -44,6 +44,7 @@ namespace Nop.Services.Customers
         protected readonly IRepository<ProductReviewHelpfulness> _productReviewHelpfulnessRepository;
         protected readonly IRepository<PollVotingRecord> _pollVotingRecordRepository;
         protected readonly IRepository<ShoppingCartItem> _shoppingCartRepository;
+        protected readonly IShortTermCacheManager _shortTermCacheManager;
         protected readonly IStaticCacheManager _staticCacheManager;
         protected readonly IStoreContext _storeContext;
         protected readonly ShoppingCartSettings _shoppingCartSettings;
@@ -72,6 +73,7 @@ namespace Nop.Services.Customers
             IRepository<ProductReviewHelpfulness> productReviewHelpfulnessRepository,
             IRepository<PollVotingRecord> pollVotingRecordRepository,
             IRepository<ShoppingCartItem> shoppingCartRepository,
+            IShortTermCacheManager shortTermCacheManager,
             IStaticCacheManager staticCacheManager,
             IStoreContext storeContext,
             ShoppingCartSettings shoppingCartSettings,
@@ -96,10 +98,28 @@ namespace Nop.Services.Customers
             _productReviewHelpfulnessRepository = productReviewHelpfulnessRepository;
             _pollVotingRecordRepository = pollVotingRecordRepository;
             _shoppingCartRepository = shoppingCartRepository;
+            _shortTermCacheManager = shortTermCacheManager;
             _staticCacheManager = staticCacheManager;
             _storeContext = storeContext;
             _shoppingCartSettings = shoppingCartSettings;
             _taxSettings = taxSettings;
+        }
+
+        #endregion
+
+        #region Utilities
+
+        /// <summary>
+        /// Gets a dictionary of all customer roles mapped by ID.
+        /// </summary>
+        /// <returns>
+        /// A task that represents the asynchronous operation and contains a dictionary of all customer roles mapped by ID.
+        /// </returns>
+        protected virtual async Task<IDictionary<int, CustomerRole>> GetAllCustomerRolesDictionaryAsync()
+        {
+            return await _staticCacheManager.GetAsync(
+                _staticCacheManager.PrepareKeyForDefaultCache(NopEntityCacheDefaults<CustomerRole>.AllCacheKey),
+                async () => await _customerRoleRepository.Table.ToDictionaryAsync(cr => cr.Id));
         }
 
         #endregion
@@ -345,8 +365,7 @@ namespace Nop.Services.Customers
         /// </returns>
         public virtual async Task<Customer> GetCustomerByIdAsync(int customerId)
         {
-            return await _customerRepository.GetByIdAsync(customerId,
-                cache => cache.PrepareKeyForShortTermCache(NopEntityCacheDefaults<Customer>.ByIdCacheKey, customerId));
+            return await _customerRepository.GetByIdAsync(customerId, cache => default, useShortTermCache: true);
         }
 
         /// <summary>
@@ -397,13 +416,11 @@ namespace Nop.Services.Customers
                 return null;
 
             var query = from c in _customerRepository.Table
-                        where c.CustomerGuid == customerGuid
-                        orderby c.Id
-                        select c;
-
-            var key = _staticCacheManager.PrepareKeyForShortTermCache(NopCustomerServicesDefaults.CustomerByGuidCacheKey, customerGuid);
-
-            return await _staticCacheManager.GetAsync(key, async () => await query.FirstOrDefaultAsync());
+                where c.CustomerGuid == customerGuid
+                orderby c.Id
+                select c;
+            
+            return await _shortTermCacheManager.GetAsync(async () => await query.FirstOrDefaultAsync(), NopCustomerServicesDefaults.CustomerByGuidCacheKey, customerGuid);
         }
 
         /// <summary>
@@ -441,14 +458,12 @@ namespace Nop.Services.Customers
             if (string.IsNullOrWhiteSpace(systemName))
                 return null;
 
-            var key = _staticCacheManager.PrepareKeyForDefaultCache(NopCustomerServicesDefaults.CustomerBySystemNameCacheKey, systemName);
-
             var query = from c in _customerRepository.Table
                         orderby c.Id
                         where c.SystemName == systemName
                         select c;
 
-            var customer = await _staticCacheManager.GetAsync(key, async () => await query.FirstOrDefaultAsync());
+            var customer = await _shortTermCacheManager.GetAsync(async () => await query.FirstOrDefaultAsync(), NopCustomerServicesDefaults.CustomerBySystemNameCacheKey, systemName);
 
             return customer;
         }
@@ -1193,7 +1208,9 @@ namespace Nop.Services.Customers
         /// </returns>
         public virtual async Task<CustomerRole> GetCustomerRoleByIdAsync(int customerRoleId)
         {
-            return await _customerRoleRepository.GetByIdAsync(customerRoleId, cache => default);
+            var allRolesById = await GetAllCustomerRolesDictionaryAsync();
+
+            return allRolesById.TryGetValue(customerRoleId, out var role) ? role : null;
         }
 
         /// <summary>
@@ -1235,15 +1252,9 @@ namespace Nop.Services.Customers
             if (customer == null)
                 throw new ArgumentNullException(nameof(customer));
 
-            var query = from cr in _customerRoleRepository.Table
-                        join crm in _customerCustomerRoleMappingRepository.Table on cr.Id equals crm.CustomerRoleId
-                        where crm.CustomerId == customer.Id &&
-                        (showHidden || cr.Active)
-                        select cr.Id;
-
-            var key = _staticCacheManager.PrepareKeyForShortTermCache(NopCustomerServicesDefaults.CustomerRoleIdsCacheKey, customer, showHidden);
-
-            return await _staticCacheManager.GetAsync(key, () => query.ToArray());
+            return (await GetCustomerRolesAsync(customer, showHidden: showHidden))
+                .Select(cr => cr.Id)
+                .ToArray();
         }
 
         /// <summary>
@@ -1260,15 +1271,14 @@ namespace Nop.Services.Customers
             if (customer == null)
                 throw new ArgumentNullException(nameof(customer));
 
-            return await _customerRoleRepository.GetAllAsync(query =>
-            {
-                return from cr in query
-                       join crm in _customerCustomerRoleMappingRepository.Table on cr.Id equals crm.CustomerRoleId
-                       where crm.CustomerId == customer.Id &&
-                             (showHidden || cr.Active)
-                       select cr;
-            }, cache => cache.PrepareKeyForShortTermCache(NopCustomerServicesDefaults.CustomerRolesCacheKey, customer, showHidden));
+            var allRolesById = await GetAllCustomerRolesDictionaryAsync();
 
+            var mappings = await _shortTermCacheManager.GetAsync(
+                async () => await _customerCustomerRoleMappingRepository.GetAllAsync(query => query.Where(crm => crm.CustomerId == customer.Id)), NopCustomerServicesDefaults.CustomerRolesCacheKey, customer);
+            
+            return mappings.Select(mapping => allRolesById.TryGetValue(mapping.CustomerRoleId, out var role) ? role : null)
+                .Where(cr => cr != null && (showHidden || cr.Active))
+                .ToList();
         }
 
         /// <summary>
@@ -1281,16 +1291,11 @@ namespace Nop.Services.Customers
         /// </returns>
         public virtual async Task<IList<CustomerRole>> GetAllCustomerRolesAsync(bool showHidden = false)
         {
-            var key = _staticCacheManager.PrepareKeyForDefaultCache(NopCustomerServicesDefaults.CustomerRolesAllCacheKey, showHidden);
+            var allRolesById = await GetAllCustomerRolesDictionaryAsync();
 
-            var query = from cr in _customerRoleRepository.Table
-                        orderby cr.Name
-                        where showHidden || cr.Active
-                        select cr;
-
-            var customerRoles = await _staticCacheManager.GetAsync(key, async () => await query.ToListAsync());
-
-            return customerRoles;
+            return allRolesById.Values
+                .Where(cr => showHidden || cr.Active)
+                .ToList();
         }
 
         /// <summary>
@@ -1554,10 +1559,8 @@ namespace Nop.Services.Customers
             if (_customerSettings.PasswordLifetime == 0)
                 return false;
 
-            var cacheKey = _staticCacheManager.PrepareKeyForShortTermCache(NopCustomerServicesDefaults.CustomerPasswordLifetimeCacheKey, customer);
-
             //get current password usage time
-            var currentLifetime = await _staticCacheManager.GetAsync(cacheKey, async () =>
+            var currentLifetime = await _shortTermCacheManager.GetAsync(async () =>
             {
                 var customerPassword = await GetCurrentPasswordAsync(customer.Id);
                 //password is not found, so return max value to force customer to change password
@@ -1565,7 +1568,7 @@ namespace Nop.Services.Customers
                     return int.MaxValue;
 
                 return (DateTime.UtcNow - customerPassword.CreatedOnUtc).Days;
-            });
+            }, NopCustomerServicesDefaults.CustomerPasswordLifetimeCacheKey, customer);
 
             return currentLifetime >= _customerSettings.PasswordLifetime;
         }
@@ -1637,13 +1640,11 @@ namespace Nop.Services.Customers
         public virtual async Task<IList<Address>> GetAddressesByCustomerIdAsync(int customerId)
         {
             var query = from address in _customerAddressRepository.Table
-                        join cam in _customerAddressMappingRepository.Table on address.Id equals cam.AddressId
-                        where cam.CustomerId == customerId
-                        select address;
-
-            var key = _staticCacheManager.PrepareKeyForShortTermCache(NopCustomerServicesDefaults.CustomerAddressesCacheKey, customerId);
-
-            return await _staticCacheManager.GetAsync(key, async () => await query.ToListAsync());
+                join cam in _customerAddressMappingRepository.Table on address.Id equals cam.AddressId
+                where cam.CustomerId == customerId
+                select address;
+            
+            return await _shortTermCacheManager.GetAsync(async () => await query.ToListAsync(), NopCustomerServicesDefaults.CustomerAddressesCacheKey, customerId);
         }
 
         /// <summary>
@@ -1661,13 +1662,11 @@ namespace Nop.Services.Customers
                 return null;
 
             var query = from address in _customerAddressRepository.Table
-                        join cam in _customerAddressMappingRepository.Table on address.Id equals cam.AddressId
-                        where cam.CustomerId == customerId && address.Id == addressId
-                        select address;
-
-            var key = _staticCacheManager.PrepareKeyForShortTermCache(NopCustomerServicesDefaults.CustomerAddressCacheKey, customerId, addressId);
-
-            return await _staticCacheManager.GetAsync(key, async () => await query.FirstOrDefaultAsync());
+                join cam in _customerAddressMappingRepository.Table on address.Id equals cam.AddressId
+                where cam.CustomerId == customerId && address.Id == addressId
+                select address;
+            
+            return await _shortTermCacheManager.GetAsync(async () => await query.FirstOrDefaultAsync(), NopCustomerServicesDefaults.CustomerAddressCacheKey, customerId, addressId);
         }
 
         /// <summary>

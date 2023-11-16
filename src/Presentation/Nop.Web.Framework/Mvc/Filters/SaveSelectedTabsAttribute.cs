@@ -1,7 +1,7 @@
-﻿using System.Net;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Nop.Core;
+using Nop.Core.Http.Extensions;
 using Nop.Data;
 using Nop.Web.Framework.Controllers;
 
@@ -76,16 +76,13 @@ namespace Nop.Web.Framework.Mvc.Filters
             /// </summary>
             /// <param name="context">A context for action filters</param>
             /// <returns>A task that represents the asynchronous operation</returns>
-            private void SaveSelectedTab(ActionExecutingContext context)
+            private async Task SaveSelectedTabAsync(ActionExecutingContext context)
             {
                 if (context == null)
                     throw new ArgumentNullException(nameof(context));
-
-                if (context.HttpContext.Request == null)
-                    return;
-
+                
                 //only in POST requests
-                if (!context.HttpContext.Request.Method.Equals(WebRequestMethods.Http.Post, StringComparison.InvariantCultureIgnoreCase))
+                if (!context.HttpContext.Request.IsPostRequest())
                     return;
 
                 //ignore AJAX requests
@@ -109,7 +106,7 @@ namespace Nop.Web.Framework.Mvc.Filters
                 var persistForTheNextRequest = actionFilter?.PersistForTheNextRequest ?? _persistForTheNextRequest;
 
                 if (context.Controller is BaseController controller)
-                    controller.SaveSelectedTabName(persistForTheNextRequest: persistForTheNextRequest);
+                    await controller.SaveSelectedTabNameAsync(persistForTheNextRequest: persistForTheNextRequest);
             }
 
             #endregion
@@ -125,7 +122,7 @@ namespace Nop.Web.Framework.Mvc.Filters
             public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
             {
                 await next();
-                SaveSelectedTab(context);
+                await SaveSelectedTabAsync(context);
             }
 
             #endregion
