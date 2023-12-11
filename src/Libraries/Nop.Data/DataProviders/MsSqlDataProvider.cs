@@ -148,7 +148,7 @@ namespace Nop.Data.DataProviders
         {
             var table = (ITable<TEntity>)base.GetTable<TEntity>();
 
-            return DataSettingsManager.UseNoLock() ? table.AsSqlServer().WithNoLock() : table;
+            return DataSettingsManager.UseNoLock() ? table.With("NOLOCK") : table;
         }
 
         /// <summary>
@@ -260,8 +260,7 @@ namespace Nop.Data.DataProviders
         /// <returns>Connection string</returns>
         public virtual string BuildConnectionString(INopConnectionStringInfo nopConnectionString)
         {
-            if (nopConnectionString is null)
-                throw new ArgumentNullException(nameof(nopConnectionString));
+            ArgumentNullException.ThrowIfNull(nopConnectionString);
 
             var builder = new SqlConnectionStringBuilder
             {
