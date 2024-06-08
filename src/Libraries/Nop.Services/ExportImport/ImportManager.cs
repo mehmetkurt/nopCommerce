@@ -1740,7 +1740,6 @@ public partial class ImportManager : IImportManager
         }
 
         var iRow = 2;
-        var rolesToSave = new List<int>();
         var allRoles = await _customerService.GetAllCustomerRolesAsync();
         var countries = await _countryService.GetAllCountriesAsync();
         var states = await _stateProvinceService.GetStateProvincesAsync();
@@ -1773,6 +1772,8 @@ public partial class ImportManager : IImportManager
                     CustomerGuid = Guid.Empty.Equals(customerGuid) ? Guid.NewGuid() : customerGuid,
                     CreatedOnUtc = DateTime.UtcNow
                 };
+
+            var rolesToSave = new List<int>();
 
             foreach (var property in manager.GetDefaultProperties)
             {
@@ -3012,9 +3013,8 @@ public partial class ImportManager : IImportManager
     public virtual async Task ImportOrdersFromXlsxAsync(Stream stream)
     {
         using var workbook = new XLWorkbook(stream);
-        var downloadedFiles = new List<string>();
 
-        (var metadata, var worksheet) = await PrepareImportOrderDataAsync(workbook);
+        var (metadata, worksheet) = await PrepareImportOrderDataAsync(workbook);
 
         //performance optimization, load all orders by guid in one SQL request
         var allOrdersByGuids = await _orderService.GetOrdersByGuidsAsync(metadata.AllOrderGuids.ToArray());
@@ -3035,10 +3035,9 @@ public partial class ImportManager : IImportManager
                 metadata.OrderItemManager.ReadDefaultFromXlsx(worksheet, iRow, 2);
 
                 //skip caption row
-                if (!metadata.OrderItemManager.IsCaption)
-                {
+                if (!metadata.OrderItemManager.IsCaption) 
                     await ImportOrderItemAsync(metadata.OrderItemManager, lastLoadedOrder);
-                }
+
                 continue;
             }
 
@@ -3066,12 +3065,14 @@ public partial class ImportManager : IImportManager
 
             var customer = allCustomersByGuids.FirstOrDefault(p => p.CustomerGuid.ToString() == metadata.Manager.GetDefaultProperty("CustomerGuid").StringValue);
 
+            var billingStateProvinceAbbreviation = string.Empty;
+            var shippingStateProvinceAbbreviation = string.Empty;
+
             foreach (var property in metadata.Manager.GetDefaultProperties)
-            {
                 switch (property.PropertyName)
                 {
                     case "StoreId":
-                        if (await _storeService.GetStoreByIdAsync(property.IntValue) is Store orderStore)
+                        if (await _storeService.GetStoreByIdAsync(property.IntValue) is { })
                             order.StoreId = property.IntValue;
                         else
                             order.StoreId = (await _storeContext.GetCurrentStoreAsync())?.Id ?? 0;
@@ -3191,14 +3192,14 @@ public partial class ImportManager : IImportManager
                         orderBillingAddress.County = property.StringValue;
                         break;
                     case "BillingStateProvinceAbbreviation":
-                        if (await _stateProvinceService.GetStateProvinceByAbbreviationAsync(property.StringValue) is StateProvince billingState)
-                            orderBillingAddress.StateProvinceId = billingState.Id;
+                        billingStateProvinceAbbreviation = property.StringValue;
+                        
                         break;
                     case "BillingZipPostalCode":
                         orderBillingAddress.ZipPostalCode = property.StringValue;
                         break;
                     case "BillingCountryCode":
-                        if (await _countryService.GetCountryByTwoLetterIsoCodeAsync(property.StringValue) is Country billingCountry)
+                        if (await _countryService.GetCountryByTwoLetterIsoCodeAsync(property.StringValue) is { } billingCountry)
                             orderBillingAddress.CountryId = billingCountry.Id;
                         break;
                     case "ShippingFirstName":
@@ -3232,18 +3233,22 @@ public partial class ImportManager : IImportManager
                         orderAddress.County = property.StringValue;
                         break;
                     case "ShippingStateProvinceAbbreviation":
-                        if (await _stateProvinceService.GetStateProvinceByAbbreviationAsync(property.StringValue) is StateProvince shippingState)
-                            orderAddress.StateProvinceId = shippingState.Id;
+                        shippingStateProvinceAbbreviation = property.StringValue;
                         break;
                     case "ShippingZipPostalCode":
                         orderAddress.ZipPostalCode = property.StringValue;
                         break;
                     case "ShippingCountryCode":
-                        if (await _countryService.GetCountryByTwoLetterIsoCodeAsync(property.StringValue) is Country shippingCountry)
+                        if (await _countryService.GetCountryByTwoLetterIsoCodeAsync(property.StringValue) is { } shippingCountry)
                             orderAddress.CountryId = shippingCountry.Id;
                         break;
                 }
-            }
+
+            if (await _stateProvinceService.GetStateProvinceByAbbreviationAsync(billingStateProvinceAbbreviation, orderBillingAddress.CountryId) is { } billingState)
+                orderBillingAddress.StateProvinceId = billingState.Id;
+
+            if (await _stateProvinceService.GetStateProvinceByAbbreviationAsync(shippingStateProvinceAbbreviation, orderAddress.CountryId) is { } shippingState)
+                orderAddress.StateProvinceId = shippingState.Id;
 
             //check order address field values from excel
             if (string.IsNullOrWhiteSpace(orderAddress.FirstName) && string.IsNullOrWhiteSpace(orderAddress.LastName) && string.IsNullOrWhiteSpace(orderAddress.Email))
