@@ -861,10 +861,6 @@ public partial class CopyProductService : ICopyProductService
         //tier prices
         await CopyTierPricesAsync(product, productCopy);
 
-        //update "HasTierPrices" and "HasDiscountsApplied" properties
-        await _productService.UpdateHasTierPricesPropertyAsync(productCopy);
-        await _productService.UpdateHasDiscountsAppliedAsync(productCopy);
-
         //associated products
         await CopyAssociatedProductsAsync(product, isPublished, copyMultimedia, copyAssociatedProducts, productCopy);
 
