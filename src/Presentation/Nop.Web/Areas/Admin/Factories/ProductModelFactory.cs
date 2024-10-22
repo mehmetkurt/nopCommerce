@@ -57,6 +57,7 @@ public partial class ProductModelFactory : IProductModelFactory
     protected readonly IMeasureService _measureService;
     protected readonly IOrderService _orderService;
     protected readonly IPictureService _pictureService;
+    protected readonly IPriceFormatter _priceFormatter;
     protected readonly IProductAttributeFormatter _productAttributeFormatter;
     protected readonly IProductAttributeParser _productAttributeParser;
     protected readonly IProductAttributeService _productAttributeService;
@@ -100,6 +101,7 @@ public partial class ProductModelFactory : IProductModelFactory
         IMeasureService measureService,
         IOrderService orderService,
         IPictureService pictureService,
+        IPriceFormatter priceFormatter,
         IProductAttributeFormatter productAttributeFormatter,
         IProductAttributeParser productAttributeParser,
         IProductAttributeService productAttributeService,
@@ -139,6 +141,7 @@ public partial class ProductModelFactory : IProductModelFactory
         _measureService = measureService;
         _orderService = orderService;
         _pictureService = pictureService;
+        _priceFormatter = priceFormatter;
         _productAttributeFormatter = productAttributeFormatter;
         _productAttributeParser = productAttributeParser;
         _productAttributeService = productAttributeService;
@@ -750,6 +753,9 @@ public partial class ProductModelFactory : IProductModelFactory
 
                 //little performance optimization: ensure that "FullDescription" is not returned
                 productModel.FullDescription = string.Empty;
+
+                //fill formatted price
+                productModel.FormattedPrice = product.ProductType == ProductType.GroupedProduct ? null : await _priceFormatter.FormatPriceAsync(product.Price);
 
                 //fill in additional values (not existing in the entity)
                 productModel.SeName = await _urlRecordService.GetSeNameAsync(product, 0, true, false);
@@ -1802,6 +1808,8 @@ public partial class ProductModelFactory : IProductModelFactory
                     ? (await _customerService.GetCustomerRoleByIdAsync(price.CustomerRoleId.Value))?.Name
                     : await _localizationService.GetResourceAsync("Admin.Catalog.Products.TierPrices.Fields.CustomerRole.All");
 
+                tierPriceModel.FormattedPrice = await _priceFormatter.FormatPriceAsync(price.Price);
+
                 return tierPriceModel;
             });
         });
@@ -1831,6 +1839,8 @@ public partial class ProductModelFactory : IProductModelFactory
             if (model == null)
                 model = tierPrice.ToModel<TierPriceModel>();
         }
+
+        model.PrimaryStoreCurrencyCode = (await _currencyService.GetCurrencyByIdAsync(_currencySettings.PrimaryStoreCurrencyId)).CurrencyCode;
 
         //prepare available stores
         await _baseAdminModelFactory.PrepareStoresAsync(model.AvailableStores);

@@ -281,6 +281,12 @@ label, label + * {
   color: #444;
 }
 
+.fieldset .warnings {
+  text-align: center;
+  margin-block-end: 30px;
+  color: #e4444c;
+}
+
 .fieldset .title strong,
 .section .title strong {
   font-weight: normal;
@@ -1376,6 +1382,10 @@ label, label + * {
 
 .block a.product-picture {
   display: none;
+}
+
+.block a.product-picture img {
+  max-width: 100%;
 }
 
 .block a.product-picture:before {
@@ -8332,6 +8342,7 @@ label, label + * {
     width: 30%;
     margin: 0 -15px 0 0;
     vertical-align: middle;
+    text-align: center;
   }
 
   .block a.product-name {
