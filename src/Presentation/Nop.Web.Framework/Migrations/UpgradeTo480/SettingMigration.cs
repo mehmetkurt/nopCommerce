@@ -1,4 +1,6 @@
 ﻿using FluentMigrator;
+using Nop.Core.Domain.Orders;
+using Nop.Core.Domain.Tax;
 using Nop.Core.Infrastructure;
 using Nop.Data;
 using Nop.Data.Migrations;
@@ -6,7 +8,7 @@ using Nop.Services.Configuration;
 
 namespace Nop.Web.Framework.Migrations.UpgradeTo480;
 
-[NopUpdateMigration("2024-05-15 00:00:00", "4.80.0", UpdateMigrationType.Settings)]
+[NopUpdateMigration("2024-05-15 00:00:00", "4.80", UpdateMigrationType.Settings)]
 public class SettingMigration : MigrationBase
 {
     /// <summary>Collect the UP migration expressions</summary>
@@ -22,6 +24,33 @@ public class SettingMigration : MigrationBase
         var displayAttributeCombinationImagesOnly = settingService.GetSetting("producteditorsettings.displayattributecombinationimagesonly");
         if (displayAttributeCombinationImagesOnly is not null)
             settingService.DeleteSetting(displayAttributeCombinationImagesOnly);
+
+        //#7325
+        var orderSettings = settingService.LoadSetting<OrderSettings>();
+        if (!settingService.SettingExists(orderSettings, settings => settings.PlaceOrderWithLock))
+        {
+            orderSettings.PlaceOrderWithLock = false;
+            settingService.SaveSetting(orderSettings, settings => settings.PlaceOrderWithLock);
+        }
+        
+        //#7394
+        if (orderSettings.MinimumOrderPlacementInterval > 10)
+        {
+            if (orderSettings.MinimumOrderPlacementInterval < 60)
+                orderSettings.MinimumOrderPlacementInterval = 1;
+            else
+                orderSettings.MinimumOrderPlacementInterval = Math.Truncate(orderSettings.MinimumOrderPlacementInterval / 60.0) + (orderSettings.MinimumOrderPlacementInterval % 60) == 0 ? 0 : 1;
+
+            settingService.SaveSetting(orderSettings, settings => settings.MinimumOrderPlacementInterval);
+        }
+
+        //#7265
+        var taxSetting = settingService.LoadSetting<TaxSettings>();
+        if (!settingService.SettingExists(taxSetting, settings => settings.EuVatRequired))
+        {
+            taxSetting.EuVatRequired = false;
+            settingService.SaveSetting(taxSetting, settings => settings.EuVatRequired);
+        }
     }
 
     public override void Down()

@@ -2348,6 +2348,20 @@ namespace Nop.Services.Installation
                     EmailAccountId = eaGeneral.Id
                 },
                 new() {
+                    Name = MessageTemplateSystemNames.QUANTITY_BELOW_VENDOR_NOTIFICATION,
+                    Subject = "%Store.Name%. Quantity below notification. %Product.Name%",
+                    Body = $"<p>{Environment.NewLine}<a href=\"%Store.URL%\">%Store.Name%</a>{Environment.NewLine}<br />{Environment.NewLine}<br />{Environment.NewLine}%Product.Name% (ID: %Product.ID%) low quantity.{Environment.NewLine}<br />{Environment.NewLine}<br />{Environment.NewLine}Quantity: %Product.StockQuantity%{Environment.NewLine}<br />{Environment.NewLine}</p>{Environment.NewLine}",
+                    IsActive = true,
+                    EmailAccountId = eaGeneral.Id
+                },
+                new() {
+                    Name = MessageTemplateSystemNames.QUANTITY_BELOW_ATTRIBUTE_COMBINATION_VENDOR_NOTIFICATION,
+                    Subject = "%Store.Name%. Quantity below notification. %Product.Name%",
+                    Body = $"<p>{Environment.NewLine}<a href=\"%Store.URL%\">%Store.Name%</a>{Environment.NewLine}<br />{Environment.NewLine}<br />{Environment.NewLine}%Product.Name% (ID: %Product.ID%) low quantity.{Environment.NewLine}<br />{Environment.NewLine}%AttributeCombination.Formatted%{Environment.NewLine}<br />{Environment.NewLine}Quantity: %AttributeCombination.StockQuantity%{Environment.NewLine}<br />{Environment.NewLine}</p>{Environment.NewLine}",
+                    IsActive = true,
+                    EmailAccountId = eaGeneral.Id
+                },
+                new() {
                     Name = MessageTemplateSystemNames.RETURN_REQUEST_STATUS_CHANGED_CUSTOMER_NOTIFICATION,
                     Subject = "%Store.Name%. Return request status was changed.",
                     Body = $"<p>{Environment.NewLine}<a href=\"%Store.URL%\">%Store.Name%</a>{Environment.NewLine}<br />{Environment.NewLine}<br />{Environment.NewLine}Hello %Customer.FullName%,{Environment.NewLine}<br />{Environment.NewLine}Your return request #%ReturnRequest.CustomNumber% status has been changed.{Environment.NewLine}</p>{Environment.NewLine}",
@@ -3135,7 +3149,7 @@ namespace Nop.Services.Installation
                 ReturnRequestsAllowFiles = false,
                 ReturnRequestsFileMaximumSize = 2048,
                 NumberOfDaysReturnRequestAvailable = 365,
-                MinimumOrderPlacementInterval = 30,
+                MinimumOrderPlacementInterval = 1,
                 ActivateGiftCardsAfterCompletingOrder = false,
                 DeactivateGiftCardsAfterCancellingOrder = false,
                 DeactivateGiftCardsAfterDeletingOrder = false,
@@ -3145,7 +3159,8 @@ namespace Nop.Services.Installation
                 AllowAdminsToBuyCallForPriceProducts = true,
                 ShowProductThumbnailInOrderDetailsPage = true,
                 DisplayCustomerCurrencyOnOrders = false,
-                DisplayOrderSummary = true
+                DisplayOrderSummary = true,
+                PlaceOrderWithLock = false,
             });
 
             await settingService.SaveSettingAsync(new SecuritySettings
@@ -3222,6 +3237,7 @@ namespace Nop.Services.Installation
                 PaymentMethodAdditionalFeeTaxClassId = 0,
                 EuVatEnabled = isEurope,
                 EuVatEnabledForGuests = false,
+                EuVatRequired = false,
                 EuVatShopCountryId =
                     isEurope
                         ? ((await _countryRepository.Table.FirstOrDefaultAsync(x => x.TwoLetterIsoCode == country))?.Id ?? 0)

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Nop.Core.Configuration;
 using Nop.Core.Infrastructure.Mapper;
 
 namespace Nop.Core.Infrastructure;
@@ -141,6 +142,12 @@ public partial class NopEngine : IEngine
     {
         ServiceProvider = application.ApplicationServices;
 
+        var settings = ServiceProvider.GetService<AppSettings>().Get<HostingConfig>();
+
+        //use path base
+        if (!string.IsNullOrEmpty(settings.PathBase))
+            application.UsePathBase(settings.PathBase);
+        
         //find startup configurations provided by other assemblies
         var typeFinder = Singleton<ITypeFinder>.Instance;
         var startupConfigurations = typeFinder.FindClassesOfType<INopStartup>();
