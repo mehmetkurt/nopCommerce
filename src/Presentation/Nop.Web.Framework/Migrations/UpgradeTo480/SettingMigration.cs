@@ -2,6 +2,7 @@
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Tax;
+using Nop.Core.Domain.Common;
 using Nop.Core.Infrastructure;
 using Nop.Data;
 using Nop.Data.Migrations;
@@ -59,6 +60,19 @@ public class SettingMigration : MigrationBase
         {
             catalogSettings.ShowSearchBoxCategories = false;
             settingService.SaveSetting(catalogSettings, settings => settings.ShowSearchBoxCategories);
+        }
+
+        //#2388
+        var exportImportTierPrisesKey = $"{nameof(CatalogSettings)}.{nameof(CatalogSettings.ExportImportTierPrises)}".ToLower();
+        if (settingService.GetSetting(exportImportTierPrisesKey) == null)
+            settingService.SetSetting(exportImportTierPrisesKey, true);
+
+        //#7228
+        var adminAreaSettings = settingService.LoadSetting<AdminAreaSettings>();
+        if (!settingService.SettingExists(adminAreaSettings, settings => settings.ProductsBulkEditGridPageSize))
+        {
+            adminAreaSettings.ProductsBulkEditGridPageSize = 100;
+            settingService.SaveSetting(adminAreaSettings, settings => settings.ProductsBulkEditGridPageSize);
         }
     }
 
