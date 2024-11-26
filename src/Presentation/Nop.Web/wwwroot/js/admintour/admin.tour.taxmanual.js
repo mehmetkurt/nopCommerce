@@ -6,16 +6,14 @@
 
     const tour = new Shepherd.Tour(AdminTourCommonTourOptions);
 
-    AdminTourNextPageButton.action = function () {
-      window.location = ((document.querySelector('base') || {}).getAttribute('href') + '/Admin/Product/Create?showtour=True').replace(/\/\//g, "/");
-    };
+    AdminTourNextPageButton.action = function () { window.location = '/Admin/Product/Create?showtour=True' };
 
     //'Fixed Rate/By country' switch steps
     tour.addStep({
       title: AdminTourDataProvider.localized_data.TaxManualSwitchTitle,
       text: AdminTourDataProvider.localized_data.TaxManualSwitchText,
       attachTo: {
-        element: '.onoffswitch',
+        element: '#onoffswitch-rate',
         on: 'bottom'
       },
       buttons: [AdminTourNextButton]
@@ -25,7 +23,7 @@
       title: AdminTourDataProvider.localized_data.TaxManualFixedTitle,
       text: AdminTourDataProvider.localized_data.TaxManualFixedText,
       attachTo: {
-        element: '.onoffswitch',
+        element: '#onoffswitch-rate',
         on: 'bottom'
       },
       buttons: [AdminTourBackButton, AdminTourNextButton]
@@ -35,7 +33,7 @@
       title: AdminTourDataProvider.localized_data.TaxManualByCountryTitle,
       text: AdminTourDataProvider.localized_data.TaxManualByCountryText,
       attachTo: {
-        element: '.onoffswitch',
+        element: '#onoffswitch-rate',
         on: 'bottom'
       },
       buttons: [AdminTourBackButton, AdminTourNextButton]
