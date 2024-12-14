@@ -10,12 +10,11 @@ using Nop.Web.Framework.Extensions;
 
 namespace Nop.Plugin.Payments.PayPalCommerce.Data;
 
-[NopMigration("2024-06-06 00:00:00", "Payments.PayPalCommerce 4.70.10. Advanced cards", MigrationProcessType.Update)]
+[NopMigration("2024-06-06 00:00:01", "Payments.PayPalCommerce 4.70.10. Advanced cards", MigrationProcessType.Update)]
 public class AdvancedCardsMigration : MigrationBase
 {
     #region Fields
 
-    private readonly ILanguageService _languageService;
     private readonly ILocalizationService _localizationService;
     private readonly ISettingService _settingService;
     private readonly OnboardingHttpClient _httpClient;
@@ -26,14 +25,12 @@ public class AdvancedCardsMigration : MigrationBase
 
     #region Ctor
 
-    public AdvancedCardsMigration(ILanguageService languageService,
-        ILocalizationService localizationService,
+    public AdvancedCardsMigration(ILocalizationService localizationService,
         ISettingService settingService,
         OnboardingHttpClient httpClient,
         PayPalCommerceServiceManager serviceManager,
         PayPalCommerceSettings settings)
     {
-        _languageService = languageService;
         _localizationService = localizationService;
         _settingService = settingService;
         _httpClient = httpClient;
@@ -117,7 +114,7 @@ public class AdvancedCardsMigration : MigrationBase
             ["Plugins.Payments.PayPalCommerce.PaymentTokens.Title"] = "Method",
             ["Plugins.Payments.PayPalCommerce.PayLater"] = "Pay Later",
             ["Plugins.Payments.PayPalCommerce.Shipment.Carrier"] = "Carrier",
-            ["Plugins.Payments.PayPalCommerce.Shipment.Carrier.Hint"] = "Cpecify the carrier for the shipment (e.g. UPS or FEDEX_UK, see allowed values on PayPal site).",
+            ["Plugins.Payments.PayPalCommerce.Shipment.Carrier.Hint"] = "Specify the carrier for the shipment (e.g. UPS or FEDEX_UK, see allowed values on PayPal site).",
         }, languageId);
 
         if (!_settingService.SettingExists(_settings, settings => settings.MerchantId))
