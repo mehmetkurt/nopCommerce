@@ -611,6 +611,14 @@ public partial class CustomerModelFactory : ICustomerModelFactory
             ItemClass = "customer-orders"
         });
 
+        model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
+        {
+            RouteName = "CustomerRecurringPayments",
+            Title = await _localizationService.GetResourceAsync("Account.CustomerRecurringPayments"),
+            Tab = (int)CustomerNavigationEnum.RecurringPayments,
+            ItemClass = "customer-recurring-payments"
+        });
+
         var store = await _storeContext.GetCurrentStoreAsync();
         var customer = await _workContext.GetCurrentCustomerAsync();
 
@@ -720,7 +728,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
             });
         }
 
-        if (_captchaSettings.Enabled && _customerSettings.AllowCustomersToCheckGiftCardBalance)
+        if (_customerSettings.AllowCustomersToCheckGiftCardBalance)
         {
             model.CustomerNavigationItems.Add(new CustomerNavigationItemModel
             {
@@ -904,7 +912,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
     /// </returns>
     public virtual Task<CheckGiftCardBalanceModel> PrepareCheckGiftCardBalanceModelAsync()
     {
-        var model = new CheckGiftCardBalanceModel();
+        var model = new CheckGiftCardBalanceModel { DisplayCaptcha = _captchaSettings.Enabled && _captchaSettings.ShowOnCheckGiftCardBalance };
 
         return Task.FromResult(model);
     }

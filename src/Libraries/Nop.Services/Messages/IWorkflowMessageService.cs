@@ -18,6 +18,17 @@ public partial interface IWorkflowMessageService
     #region Customer workflow
 
     /// <summary>
+    /// Sends 'Failed login attempt' notification message to a customer
+    /// </summary>
+    /// <param name="customer">Customer instance</param>
+    /// <param name="languageId">Message language identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the queued email identifier
+    /// </returns>
+    Task<IList<int>> SendCustomerFailedLoginAttemptNotificationAsync(Customer customer, int languageId);
+
+    /// <summary>
     /// Sends 'New customer' notification message to a store owner
     /// </summary>
     /// <param name="customer">Customer instance</param>
@@ -243,6 +254,17 @@ public partial interface IWorkflowMessageService
     /// </returns>
     Task<IList<int>> SendOrderCompletedCustomerNotificationAsync(Order order, int languageId,
         string attachmentFilePath = null, string attachmentFileName = null);
+
+    /// <summary>
+    /// Sends an order completed notification to a store owner
+    /// </summary>
+    /// <param name="order">Order instance</param>
+    /// <param name="languageId">Message language identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the queued email identifier
+    /// </returns>
+    Task<IList<int>> SendOrderCompletedStoreOwnerNotificationAsync(Order order, int languageId);
 
     /// <summary>
     /// Sends an order cancelled notification to a customer
