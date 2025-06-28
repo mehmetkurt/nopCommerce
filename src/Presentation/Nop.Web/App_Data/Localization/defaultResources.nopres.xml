@@ -16056,6 +16056,9 @@
   <LocaleResource Name="Admin.System.QueuedEmails.Requeued">
     <Value>The queued email has been requeued successfully.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.System.QueuedEmails.RequeueSelected">
+    <Value>Requeue selected</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.System.QueuedEmails.Updated">
     <Value>The queued email has been updated successfully.</Value>
   </LocaleResource>
@@ -17625,6 +17628,9 @@
   <LocaleResource Name="Enums.Nop.Core.Domain.Forums.EditorType.HtmlEditor">
     <Value>Html editor</Value>
   </LocaleResource>
+  <LocaleResource Name="Enums.Nop.Core.Domain.Forums.EditorType.MarkdownEditor">
+    <Value>Markdown editor</Value>
+  </LocaleResource>
   <LocaleResource Name="Enums.Nop.Core.Domain.Forums.EditorType.SimpleTextBox">
     <Value>Simple textbox</Value>
   </LocaleResource>
@@ -18299,6 +18305,12 @@
   </LocaleResource>
   <LocaleResource Name="Manufacturers.ViewAll">
     <Value>View all</Value>
+  </LocaleResource>
+  <LocaleResource Name="MarkdownEditor.TabPreview">
+    <Value>Preview</Value>
+  </LocaleResource>
+  <LocaleResource Name="MarkdownEditor.TabWrite">
+    <Value>Write</Value>
   </LocaleResource>
   <LocaleResource Name="Media.Category.ImageAlternateTextFormat">
     <Value>Picture for category {0}</Value>

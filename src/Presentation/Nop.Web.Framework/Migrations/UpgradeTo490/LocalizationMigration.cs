@@ -212,6 +212,9 @@ public class LocalizationMigration : MigrationBase
             ["Admin.System.SystemInfo.DatabaseCollation"] = "Database collation",
             ["Admin.System.SystemInfo.DatabaseCollation.Hint"] = "The collation defines the rules for sorting and comparing data.",
 
+            //#2192
+            ["Admin.System.QueuedEmails.RequeueSelected"] = "Requeue selected",
+
 			//#1779
             ["ActivityLog.PublicStore.Login.Fail"] = "Public store. Customer has failed to log in: {0}",
             ["Admin.Configuration.Settings.CustomerUser.NotifyFailedLoginAttempt"] = "Notify customers about failed login attempts",
@@ -258,6 +261,11 @@ public class LocalizationMigration : MigrationBase
             ["Account.ForumSubscriptions.Description"] = "You will receive an email when a new forum topic/post is created.",
             ["Admin.ContentManagement.MessageTemplates.Fields.BccEmailAddresses.Hint"] = "The blind carbon copy (BCC) recipients for this email message.",
             ["BackInStockSubscriptions.Tooltip"] = "You'll receive a onetime email when this product is available for ordering again. We will not send you any other emails or add you to our newsletter; you will only be emailed about this product!",
+
+            //#5199
+            ["Enums.Nop.Core.Domain.Forums.EditorType.MarkdownEditor"] = "Markdown editor",
+            ["MarkdownEditor.TabWrite"] = "Write",
+            ["MarkdownEditor.TabPreview"] = "Preview",            
         }, languageId);
 
         #endregion
