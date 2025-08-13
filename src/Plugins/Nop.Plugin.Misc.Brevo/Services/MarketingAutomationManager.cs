@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Routing;
-using Nop.Core;
+﻿using Nop.Core;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Directory;
 using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Tax;
+using Nop.Core.Http;
 using Nop.Plugin.Misc.Brevo.MarketingAutomation;
 using Nop.Services.Catalog;
 using Nop.Services.Common;
@@ -27,7 +25,6 @@ public class MarketingAutomationManager
 
     protected readonly BrevoSettings _brevoSettings;
     protected readonly CurrencySettings _currencySettings;
-    protected readonly IActionContextAccessor _actionContextAccessor;
     protected readonly IAddressService _addressService;
     protected readonly ICategoryService _categoryService;
     protected readonly ICountryService _countryService;
@@ -44,7 +41,6 @@ public class MarketingAutomationManager
     protected readonly IShoppingCartService _shoppingCartService;
     protected readonly IStateProvinceService _stateProvinceService;
     protected readonly IStoreContext _storeContext;
-    protected readonly IUrlHelperFactory _urlHelperFactory;
     protected readonly IWebHelper _webHelper;
     protected readonly IWorkContext _workContext;
     protected readonly MarketingAutomationHttpClient _marketingAutomationHttpClient;
@@ -55,7 +51,6 @@ public class MarketingAutomationManager
 
     public MarketingAutomationManager(BrevoSettings brevoSettings,
         CurrencySettings currencySettings,
-        IActionContextAccessor actionContextAccessor,
         IAddressService addressService,
         ICategoryService categoryService,
         ICountryService countryService,
@@ -72,14 +67,12 @@ public class MarketingAutomationManager
         IShoppingCartService shoppingCartService,
         IStateProvinceService stateProvinceService,
         IStoreContext storeContext,
-        IUrlHelperFactory urlHelperFactory,
         IWebHelper webHelper,
         IWorkContext workContext,
         MarketingAutomationHttpClient marketingAutomationHttpClient)
     {
         _brevoSettings = brevoSettings;
         _currencySettings = currencySettings;
-        _actionContextAccessor = actionContextAccessor;
         _addressService = addressService;
         _categoryService = categoryService;
         _countryService = countryService;
@@ -96,7 +89,6 @@ public class MarketingAutomationManager
         _shoppingCartService = shoppingCartService;
         _stateProvinceService = stateProvinceService;
         _storeContext = storeContext;
-        _urlHelperFactory = urlHelperFactory;
         _webHelper = webHelper;
         _workContext = workContext;
         _marketingAutomationHttpClient = marketingAutomationHttpClient;
@@ -138,9 +130,6 @@ public class MarketingAutomationManager
 
             if (cart.Any())
             {
-                //get URL helper
-                var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext);
-
                 //get shopping cart amounts
                 var (cartDiscount, _, cartSubtotal, _, _) = await _orderTotalCalculationService.GetShoppingCartSubTotalAsync(cart,
                     await _workContext.GetTaxDisplayTypeAsync() == TaxDisplayType.IncludingTax);
@@ -190,7 +179,7 @@ public class MarketingAutomationManager
                     tax = cartTax,
                     discount = cartDiscount,
                     revenue = cartTotal ?? decimal.Zero,
-                    url = urlHelper.RouteUrl("ShoppingCart", null, _webHelper.GetCurrentRequestProtocol()),
+                    url = _nopUrlHelper.RouteUrl(NopRouteNames.General.CART, null, _webHelper.GetCurrentRequestProtocol()),
                     currency = (await _currencyService.GetCurrencyByIdAsync(_currencySettings.PrimaryStoreCurrencyId))?.CurrencyCode,
                     //gift_wrapping = string.Empty, //currently we can't get this value
                     items = itemsData
@@ -251,9 +240,6 @@ public class MarketingAutomationManager
         {
             //first, try to identify current customer
             await _marketingAutomationHttpClient.RequestAsync(new IdentifyRequest { Email = customer.Email ?? billingAddress.Email });
-
-            //get URL helper
-            var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext);
 
             //get products data by order items
             var itemsData = await (await _orderService.GetOrderItemsAsync(order.Id)).SelectAwait(async item =>
@@ -329,7 +315,7 @@ public class MarketingAutomationManager
                 tax = order.OrderTax,
                 discount = order.OrderDiscount,
                 revenue = order.OrderTotal,
-                url = urlHelper.RouteUrl("OrderDetails", new { orderId = order.Id }, _webHelper.GetCurrentRequestProtocol()),
+                url = _nopUrlHelper.RouteUrl(NopRouteNames.Standard.ORDER_DETAILS, new { orderId = order.Id }, _webHelper.GetCurrentRequestProtocol()),
                 currency = order.CustomerCurrencyCode,
                 //gift_wrapping = string.Empty, //currently we can't get this value
                 items = itemsData,

@@ -1,9 +1,6 @@
 ﻿using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.WebUtilities;
 using Newtonsoft.Json;
 using Nop.Core;
@@ -16,6 +13,7 @@ using Nop.Core.Domain.Payments;
 using Nop.Core.Domain.Shipping;
 using Nop.Core.Domain.Stores;
 using Nop.Core.Domain.Tax;
+using Nop.Core.Http;
 using Nop.Plugin.Payments.PayPalCommerce.Domain;
 using Nop.Plugin.Payments.PayPalCommerce.Services.Api;
 using Nop.Plugin.Payments.PayPalCommerce.Services.Api.Authentication;
@@ -60,7 +58,6 @@ public class PayPalCommerceServiceManager
 
     private readonly CurrencySettings _currencySettings;
     private readonly CustomerSettings _customerSettings;
-    private readonly IActionContextAccessor _actionContextAccessor;
     private readonly IAddressService _addressService;
     private readonly IAttributeParser<CheckoutAttribute, CheckoutAttributeValue> _checkoutAttributeParser;
     private readonly ICountryService _countryService;
@@ -87,7 +84,6 @@ public class PayPalCommerceServiceManager
     private readonly IStoreContext _storeContext;
     private readonly IStoreService _storeService;
     private readonly ITaxService _taxService;
-    private readonly IUrlHelperFactory _urlHelperFactory;
     private readonly IWebHelper _webHelper;
     private readonly IWorkContext _workContext;
     private readonly OrderSettings _orderSettings;
@@ -102,7 +98,6 @@ public class PayPalCommerceServiceManager
 
     public PayPalCommerceServiceManager(CurrencySettings currencySettings,
         CustomerSettings customerSettings,
-        IActionContextAccessor actionContextAccessor,
         IAddressService addressService,
         IAttributeParser<CheckoutAttribute, CheckoutAttributeValue> checkoutAttributeParser,
         ICountryService countryService,
@@ -129,7 +124,6 @@ public class PayPalCommerceServiceManager
         IStoreContext storeContext,
         IStoreService storeService,
         ITaxService taxService,
-        IUrlHelperFactory urlHelperFactory,
         IWebHelper webHelper,
         IWorkContext workContext,
         OrderSettings orderSettings,
@@ -140,7 +134,6 @@ public class PayPalCommerceServiceManager
     {
         _currencySettings = currencySettings;
         _customerSettings = customerSettings;
-        _actionContextAccessor = actionContextAccessor;
         _addressService = addressService;
         _checkoutAttributeParser = checkoutAttributeParser;
         _countryService = countryService;
@@ -167,7 +160,6 @@ public class PayPalCommerceServiceManager
         _storeContext = storeContext;
         _storeService = storeService;
         _taxService = taxService;
-        _urlHelperFactory = urlHelperFactory;
         _webHelper = webHelper;
         _workContext = workContext;
         _orderSettings = orderSettings;
@@ -359,7 +351,6 @@ public class PayPalCommerceServiceManager
     /// <returns>Experience context</returns>
     private ExperienceContext PrepareOrderContext(PayPalCommerceSettings settings, CartDetails details, string orderGuid, bool isApplePay = false)
     {
-        var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext);
         var protocol = _webHelper.GetCurrentRequestProtocol();
 
         var shippingPreference = ShippingPreferenceType.NO_SHIPPING.ToString().ToUpper();
@@ -380,11 +371,11 @@ public class PayPalCommerceServiceManager
                 : UserActionType.CONTINUE.ToString().ToUpper(),
             CancelUrl = details.Placement switch
             {
-                ButtonPlacement.PaymentMethod => urlHelper.RouteUrl(PayPalCommerceDefaults.Route.PaymentInfo, null, protocol),
-                ButtonPlacement.Cart or ButtonPlacement.Product => urlHelper.RouteUrl(PayPalCommerceDefaults.Route.ShoppingCart, null, protocol),
+                ButtonPlacement.PaymentMethod => _nopUrlHelper.RouteUrl(PayPalCommerceDefaults.Route.PaymentInfo, null, protocol),
+                ButtonPlacement.Cart or ButtonPlacement.Product => _nopUrlHelper.RouteUrl(NopRouteNames.General.CART, null, protocol),
                 _ => null
             },
-            ReturnUrl = urlHelper.RouteUrl(PayPalCommerceDefaults.Route.ConfirmOrder, new { token = orderGuid, approve = true }, protocol),
+            ReturnUrl = _nopUrlHelper.RouteUrl(PayPalCommerceDefaults.Route.ConfirmOrder, new { token = orderGuid, approve = true }, protocol),
             PaymentMethodPreference = settings.ImmediatePaymentRequired
                 ? PaymentMethodPreferenceType.IMMEDIATE_PAYMENT_REQUIRED.ToString().ToUpper()
                 : PaymentMethodPreferenceType.UNRESTRICTED.ToString().ToUpper(),
@@ -399,14 +390,13 @@ public class PayPalCommerceServiceManager
     /// <returns>Experience context</returns>
     private ExperienceContext PrepareRecurringPaymentContext(CartDetails details)
     {
-        var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext);
         var protocol = _webHelper.GetCurrentRequestProtocol();
 
         return new()
         {
             BrandName = CommonHelper.EnsureMaximumLength(details.Store.Name, 127),
-            CancelUrl = urlHelper.RouteUrl(PayPalCommerceDefaults.Route.PaymentInfo, null, protocol),
-            ReturnUrl = urlHelper.RouteUrl(PayPalCommerceDefaults.Route.ApproveToken, null, protocol),
+            CancelUrl = _nopUrlHelper.RouteUrl(PayPalCommerceDefaults.Route.PaymentInfo, null, protocol),
+            ReturnUrl = _nopUrlHelper.RouteUrl(PayPalCommerceDefaults.Route.ApproveToken, null, protocol),
             PaymentMethodPreference = PaymentMethodPreferenceType.IMMEDIATE_PAYMENT_REQUIRED.ToString().ToUpper(),
             ShippingPreference = details.ShippingIsRequired
                 ? ShippingPreferenceType.SET_PROVIDED_ADDRESS.ToString().ToUpper()
@@ -3022,11 +3012,10 @@ public class PayPalCommerceServiceManager
                 throw new NopException("Plugin not configured");
 
             //prepare webhook URL
-            var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext);
             var store = storeId > 0
                 ? await _storeService.GetStoreByIdAsync(storeId)
                 : await _storeContext.GetCurrentStoreAsync();
-            var webhookUrl = $"{store.Url.TrimEnd('/')}{urlHelper.RouteUrl(PayPalCommerceDefaults.Route.Webhook)}".ToLowerInvariant();
+            var webhookUrl = $"{store.Url.TrimEnd('/')}{_nopUrlHelper.RouteUrl(PayPalCommerceDefaults.Route.Webhook)}".ToLowerInvariant();
 
             //check whether the webhook already exists
             var (webhook, _) = await GetWebhookAsync(settings, webhookUrl);
@@ -3394,9 +3383,8 @@ public class PayPalCommerceServiceManager
             var store = storeId > 0
                 ? await _storeService.GetStoreByIdAsync(storeId)
                 : await _storeContext.GetCurrentStoreAsync();
-            var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext);
             var returnUrl = $"{store.Url.TrimEnd('/')}" +
-                $"{urlHelper.RouteUrl(PayPalCommerceDefaults.Route.OnboardingCallback, new { storeId = storeId })}";
+                $"{_nopUrlHelper.RouteUrl(PayPalCommerceDefaults.Route.OnboardingCallback, new { storeId = storeId })}";
 
             //sandbox URL
             var onboarding = new Onboarding
