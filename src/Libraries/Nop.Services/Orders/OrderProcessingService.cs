@@ -758,7 +758,7 @@ public partial class OrderProcessingService : IOrderProcessingService
             ShippingStatus = details.ShippingStatus,
             ShippingMethod = details.ShippingMethodName,
             ShippingRateComputationMethodSystemName = details.ShippingRateComputationMethodSystemName,
-            CustomValuesXml = CommonHelper.SerializeCustomValuesToXml(processPaymentRequest.CustomValues),
+            CustomValuesXml = processPaymentRequest.CustomValues.SerializeToXml(),
             VatNumber = details.VatNumber,
             CreatedOnUtc = DateTime.UtcNow,
             CustomOrderNumber = string.Empty
@@ -1853,9 +1853,10 @@ public partial class OrderProcessingService : IOrderProcessingService
                 InitialOrder = initialOrder,
                 RecurringCycleLength = recurringPayment.CycleLength,
                 RecurringCyclePeriod = recurringPayment.CyclePeriod,
-                RecurringTotalCycles = recurringPayment.TotalCycles,
-                CustomValues = CommonHelper.DeserializeCustomValuesFromXml(initialOrder.CustomValuesXml)
+                RecurringTotalCycles = recurringPayment.TotalCycles
             };
+
+            processPaymentRequest.CustomValues.FillByXml(initialOrder.CustomValuesXml);
 
             //prepare order details
             var details = await PrepareRecurringOrderDetailsAsync(processPaymentRequest);
@@ -2331,6 +2332,11 @@ public partial class OrderProcessingService : IOrderProcessingService
 
         //cancel order
         await SetOrderStatusAsync(order, OrderStatus.Cancelled, notifyCustomer);
+
+        //notify store owner
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+        if (order.CustomerId == currentCustomer.Id)
+            await _workflowMessageService.SendOrderCancelledStoreOwnerNotificationAsync(order, _localizationSettings.DefaultAdminLanguageId);
 
         //add a note
         await AddOrderNoteAsync(order, "Order has been cancelled");

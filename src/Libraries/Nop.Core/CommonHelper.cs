@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
 using Nop.Core.Infrastructure;
 
 namespace Nop.Core;
@@ -40,9 +39,7 @@ public partial class CommonHelper
         output = EnsureMaximumLength(output, 255);
 
         if (!IsValidEmail(output))
-        {
             throw new NopException("Email is not valid.");
-        }
 
         return output;
     }
@@ -117,9 +114,7 @@ public partial class CommonHelper
 
         var result = str[0..(maxLength - pLen)];
         if (!string.IsNullOrEmpty(postfix))
-        {
             result += postfix;
-        }
 
         return result;
     }
@@ -189,8 +184,8 @@ public partial class CommonHelper
         ArgumentNullException.ThrowIfNull(propertyName);
 
         var instanceType = instance.GetType();
-        var pi = instanceType.GetProperty(propertyName) 
-                 ?? throw new NopException("No property '{0}' found on the instance of type '{1}'.", propertyName, instanceType);
+        var pi = instanceType.GetProperty(propertyName)
+            ?? throw new NopException("No property '{0}' found on the instance of type '{1}'.", propertyName, instanceType);
 
         if (!pi.CanWrite)
             throw new NopException("The property '{0}' on the instance of type '{1}' does not have a setter.", propertyName, instanceType);
@@ -274,6 +269,23 @@ public partial class CommonHelper
     }
 
     /// <summary>
+    /// Converts a string from <c>SNAKE_CASE</c> to <c>PascalCase</c>
+    /// </summary>
+    /// <param name="str">Input string</param>
+    /// <returns>Splitted <c>PascalCase</c></returns>
+    public static string SnakeCaseToPascalCase(string str)
+    {
+        if (string.IsNullOrEmpty(str))
+            return string.Empty;
+
+        var tempString = str.ToLower().Replace("_", " ");
+
+        return CultureInfo.InvariantCulture.TextInfo
+            .ToTitleCase(tempString)
+            .Replace(" ", string.Empty);
+    }
+
+    /// <summary>
     /// Get difference in years
     /// </summary>
     /// <param name="startDate"></param>
@@ -308,60 +320,6 @@ public partial class CommonHelper
         }
         catch { }
         return date;
-    }
-
-    /// <summary>
-    /// Serialize dictionary of custom values into XML format
-    /// </summary>
-    /// <param name="customValues">Custom values</param>
-    /// <returns>XML of custom values</returns>
-    public static string SerializeCustomValuesToXml(IDictionary<string, string> customValues)
-    {
-        ArgumentNullException.ThrowIfNull(customValues);
-
-        if (!customValues.Any())
-            return null;
-
-        using var textWriter = new StringWriter();
-
-        var root = new XElement("DictionarySerializer");
-        root.Add(customValues.Select(p => new XElement("item", new XElement("key", p.Key), new XElement("value", p.Value))));
-
-        var document = new XDocument();
-        document.Add(root);
-        document.Save(textWriter, SaveOptions.DisableFormatting);
-
-        var result = textWriter.ToString();
-
-        return result;
-    }
-
-    /// <summary>
-    /// Deserialize XML of custom values into dictionary
-    /// </summary>
-    /// <param name="customValuesXml">XML of custom values</param>
-    /// <returns>Dictionary of custom values</returns>
-    public static Dictionary<string, string> DeserializeCustomValuesFromXml(string customValuesXml)
-    {
-        var dictionary = new Dictionary<string, string>();
-
-        if (string.IsNullOrWhiteSpace(customValuesXml))
-            return dictionary;
-
-        try
-        {
-            using var textReader = new StringReader(customValuesXml);
-            var rootElement = XDocument.Load(textReader).Root;
-            dictionary = rootElement!.Elements("item")
-                .Select(i => new KeyValuePair<string, string>(i.Element("key")!.Value, i.Element("value")!.Value))
-                .ToDictionary();
-        }
-        catch
-        {
-            return dictionary;
-        }
-
-        return dictionary;
     }
 
     #endregion
