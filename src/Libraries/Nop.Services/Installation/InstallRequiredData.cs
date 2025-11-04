@@ -1304,6 +1304,7 @@ public partial class InstallationService
         await SaveSettingAsync(dictionary, new CommonSettings
         {
             UseSystemEmailForContactUsForm = true,
+            SubjectFieldOnContactUsForm = false,
             DisplayJavaScriptDisabledWarning = false,
             Log404Errors = true,
             BreadcrumbDelimiter = "/",
@@ -1502,7 +1503,8 @@ public partial class InstallationService
             AllowMetaKeywordsGeneration = true,
             MetaKeywordsQuery = ArtificialIntelligenceDefaults.MetaKeywordsQuery,
             AllowMetaDescriptionGeneration = true,
-            MetaDescriptionQuery = ArtificialIntelligenceDefaults.MetaDescriptionQuery
+            MetaDescriptionQuery = ArtificialIntelligenceDefaults.MetaDescriptionQuery,
+            LogRequests = false
         });
 
         await SaveSettingAsync(dictionary, new LocalizationSettings

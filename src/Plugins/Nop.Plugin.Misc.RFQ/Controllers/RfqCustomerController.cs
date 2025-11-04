@@ -1,16 +1,20 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Nop.Core;
 using Nop.Core.Domain.Customers;
+using Nop.Core.Domain.Security;
 using Nop.Core.Http;
+using Nop.Core.Http.Extensions;
 using Nop.Plugin.Misc.RFQ.Domains;
 using Nop.Plugin.Misc.RFQ.Factories;
 using Nop.Plugin.Misc.RFQ.Models.Customer;
 using Nop.Plugin.Misc.RFQ.Services;
 using Nop.Services.Customers;
+using Nop.Services.Localization;
 using Nop.Services.Orders;
 using Nop.Services.Security;
 using Nop.Web.Controllers;
 using Nop.Web.Framework.Controllers;
+using Nop.Web.Framework.Mvc.Filters;
 
 namespace Nop.Plugin.Misc.RFQ.Controllers;
 
@@ -19,8 +23,10 @@ public class RfqCustomerController : BasePublicController
 {
     #region Fields
 
+    private readonly CaptchaSettings _captchaSettings;
     private readonly CustomerModelFactory _modelFactory;
     private readonly ICustomerService _customerService;
+    private readonly ILocalizationService _localizationService;
     private readonly IPermissionService _permissionService;
     private readonly IShoppingCartService _shoppingCartService;
     private readonly IStoreContext _storeContext;
@@ -32,8 +38,10 @@ public class RfqCustomerController : BasePublicController
 
     #region Ctor
 
-    public RfqCustomerController(CustomerModelFactory modelFactory,
+    public RfqCustomerController(CaptchaSettings captchaSettings,
+        CustomerModelFactory modelFactory,
         ICustomerService customerService,
+        ILocalizationService localizationService,
         IPermissionService permissionService,
         IShoppingCartService shoppingCartService,
         IStoreContext storeContext,
@@ -41,8 +49,10 @@ public class RfqCustomerController : BasePublicController
         RfqService rfqService,
         RfqSettings rfqSettings)
     {
+        _captchaSettings = captchaSettings;
         _modelFactory = modelFactory;
         _customerService = customerService;
+        _localizationService = localizationService;
         _permissionService = permissionService;
         _shoppingCartService = shoppingCartService;
         _storeContext = storeContext;
@@ -86,7 +96,76 @@ public class RfqCustomerController : BasePublicController
 
         return null;
     }
-    
+
+    private async Task<IList<string>> ValidateFormAsync(RequestQuote request, List<RequestQuoteItem> items)
+    {
+        var errors = new List<string>();
+
+        if (request == null)
+            return errors;
+
+        if (!Request.IsPostRequest() || !Request.HasFormContentType) 
+            return errors;
+
+        var form = await Request.ReadFormAsync();
+
+        foreach (var requestQuoteItem in items)
+        {
+            await validateUnitPrice(requestQuoteItem);
+            await validateQuantity(requestQuoteItem);
+        }
+
+        return errors;
+
+        async Task validateUnitPrice(RequestQuoteItem requestQuoteItem)
+        {
+            var key = $"{RfqDefaults.UNIT_PRICE_FORM_KEY}{requestQuoteItem.Id}";
+
+            if (!form.ContainsKey(key)) 
+                return;
+
+            var formValue = form[key];
+
+            if (!decimal.TryParse(formValue, out var unitPrice))
+                return;
+
+            requestQuoteItem.RequestedUnitPrice = unitPrice;
+
+            if (unitPrice >= 0)
+                return;
+
+            var currentCurrency = await _workContext.GetWorkingCurrencyAsync();
+            var model = await _modelFactory.PrepareRequestQuoteItemModelAsync(new RequestQuote(),
+                requestQuoteItem, currentCurrency);
+
+            errors.Add(string.Format(await _localizationService.GetResourceAsync("Plugins.Misc.RFQ.CustomerRequest.RequestedUnitPrice.MustBeEqualOrGreaterThanZero"), model.ProductName));
+        }
+
+        async Task validateQuantity(RequestQuoteItem requestQuoteItem)
+        {
+            var key = $"{RfqDefaults.QUANTITY_FORM_KEY}{requestQuoteItem.Id}";
+
+            if (!form.ContainsKey(key))
+                return;
+
+            var formValue = form[key];
+
+            if (!int.TryParse(formValue, out var quantity))
+                return;
+
+            requestQuoteItem.RequestedQty = quantity;
+
+            if (quantity > 0)
+                return;
+
+            var currentCurrency = await _workContext.GetWorkingCurrencyAsync();
+            var model = await _modelFactory.PrepareRequestQuoteItemModelAsync(new RequestQuote(),
+                requestQuoteItem, currentCurrency);
+
+            errors.Add(string.Format(await _localizationService.GetResourceAsync("Plugins.Misc.RFQ.CustomerRequest.RequestedQty.MustGreaterThanZero"), model.ProductName));
+        }
+    }
+
     #endregion
 
     #region Methods
@@ -133,12 +212,30 @@ public class RfqCustomerController : BasePublicController
 
     [HttpPost, ActionName("CustomerRequest")]
     [FormValueRequired("send")]
-    public async Task<IActionResult> SendRequest(RequestQuoteModel model)
+    [ValidateCaptcha]
+    public async Task<IActionResult> SendRequest(RequestQuoteModel model, bool captchaValid)
     {
         var result = await CheckCustomerPermissionAsync(await _workContext.GetCurrentCustomerAsync());
 
         if (result != null)
             return result;
+
+        //validate CAPTCHA
+        if (_captchaSettings.Enabled && _rfqSettings.ShowCaptchaOnRequestPage && !captchaValid)
+        {
+            ModelState.AddModelError("", await _localizationService.GetResourceAsync("Common.WrongCaptchaMessage"));
+        }
+
+        var (request, items) = await _rfqService.CreateRequestQuoteByShoppingCartAsync();
+
+        if (request == null)
+            return RedirectToRoute(NopRouteNames.General.HOMEPAGE);
+
+        var validationErrors = await ValidateFormAsync(request, items);
+
+        if (validationErrors != null && validationErrors.Any())
+            foreach (var validationError in validationErrors) 
+                ModelState.AddModelError(string.Empty, validationError);
 
         if (ModelState.IsValid)
         {
@@ -152,7 +249,7 @@ public class RfqCustomerController : BasePublicController
             return RedirectToAction("CustomerRequest", "RfqCustomer", new { requestId = model.Id });
         }
 
-        model = await _modelFactory.PrepareRequestQuoteModelAsync(model);
+        model = await _modelFactory.PrepareRequestQuoteModelAsync(request, items, model);
 
         return View("~/Plugins/Misc.RFQ/Views/CustomerRequest.cshtml", model);
     }
