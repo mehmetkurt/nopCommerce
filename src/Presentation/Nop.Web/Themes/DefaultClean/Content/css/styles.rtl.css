@@ -111,6 +111,7 @@ textarea, select {
   border: 1px solid #ddd;
   padding: 8px;
   vertical-align: middle;
+  direction: rtl;
 }
 
 input, textarea, select, button {
@@ -3254,7 +3255,7 @@ label, label + * {
 }
 
 .write-review .review-rating {
-  text-align: center;
+  text-align: right;
   padding-top: 10px;
   padding-bottom: 10px;
 }
@@ -5096,7 +5097,7 @@ label, label + * {
 .product-estimate-shipping .open-estimate-shipping-popup .arrow-down {
   transform: rotate(45deg);
   -webkit-transform: rotate(45deg);
-  margin: 0 0 3px 6px;
+  margin: 0 6px 3px 0;
   border: solid black;
   border-width: 0 1px 1px 0;
   display: inline-block;
@@ -7172,7 +7173,7 @@ label, label + * {
 
   .write-review .review-rating div.name-description {
     width: 100%;
-    margin: 0 5px 0 0;
+    margin: 0 0 0 5px;
     text-align: center;
   }
 
@@ -8852,8 +8853,8 @@ label, label + * {
 
   .write-review .review-rating div.name-description {
     width: 265px;
-    margin: 0 5px 0 0;
-    text-align: right
+    margin: 0 0 0 5px;
+    text-align: left;
   }
 
   .product-review-item .review-text {
@@ -9246,7 +9247,7 @@ label, label + * {
   }
 
   .write-review .review-rating div.name-description {
-    margin: 0 5px 0 0;
+    margin: 0 0 0 5px;
     min-width: 375px;
   }
 
