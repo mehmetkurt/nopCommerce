@@ -11,18 +11,21 @@ namespace Nop.Web.Framework.Migrations.UpgradeTo480;
 [NopMigration("2023-11-07 12:00:00", "ACL. Added advanced permissions")]
 public class AclMigration : Migration
 {
+    protected readonly INopDataProvider _dataProvider;
     protected readonly IRepository<CustomerRole> _customerRoleRepository;
     protected readonly IRepository<Language> _languageRepository;
     protected readonly IRepository<LocaleStringResource> _localeStringRepository;
     protected readonly IRepository<PermissionRecord> _permissionRepository;
     protected readonly IRepository<PermissionRecordCustomerRoleMapping> _permissionRecordCustomerRoleMappingRepository;
 
-    public AclMigration(IRepository<CustomerRole> customerRoleRepository,
+    public AclMigration(INopDataProvider dataProvider,
+        IRepository<CustomerRole> customerRoleRepository,
         IRepository<Language> languageRepository,
         IRepository<LocaleStringResource> localeStringRepository,
         IRepository<PermissionRecord> permissionRepository,
         IRepository<PermissionRecordCustomerRoleMapping> permissionRecordCustomerRoleMappingRepository)
     {
+        _dataProvider = dataProvider;
         _customerRoleRepository = customerRoleRepository;
         _languageRepository = languageRepository;
         _localeStringRepository = localeStringRepository;
@@ -51,7 +54,7 @@ public class AclMigration : Migration
         var dbPermissions = _permissionRepository.Table
             .OrderBy(pr => pr.Id)
             .ToList();
-        
+
         PermissionRecord getPermissionRecord(string systemName)
         {
             if (string.IsNullOrWhiteSpace(systemName))
@@ -62,12 +65,12 @@ public class AclMigration : Migration
 
             return permissionRecord;
         }
-        
+
         void insertMappings(string oldPermissionSystemName, params string[] newPermissionSystemNames)
         {
             var record = getPermissionRecord(oldPermissionSystemName);
 
-            if (record == null) 
+            if (record == null)
                 return;
 
             var roles = GetMappingByPermissionRecordId(record.Id)
@@ -84,7 +87,7 @@ public class AclMigration : Migration
                 foreach (var role in roles)
                     try
                     {
-                        _permissionRecordCustomerRoleMappingRepository.Insert(
+                        _dataProvider.InsertEntity(
                             new PermissionRecordCustomerRoleMapping
                             {
                                 CustomerRoleId = role,
@@ -97,9 +100,9 @@ public class AclMigration : Migration
                     }
             }
 
-            _permissionRepository.Delete(record);
+            _dataProvider.DeleteEntity(record);
         }
-        
+
         insertMappings("AccessAdminPanel", StandardPermission.Security.ACCESS_ADMIN_PANEL);
         insertMappings("AllowCustomerImpersonation", StandardPermission.Customers.CUSTOMERS_IMPERSONATION);
         insertMappings("ManageProducts", StandardPermission.Catalog.PRODUCTS_VIEW, StandardPermission.Catalog.PRODUCTS_CREATE_EDIT_DELETE, StandardPermission.Catalog.PRODUCTS_IMPORT_EXPORT, StandardPermission.Reports.LOW_STOCK);
@@ -165,7 +168,7 @@ public class AclMigration : Migration
             var viewDiscountsPermission = _permissionRepository.Table.FirstOrDefault(x => x.SystemName == StandardPermission.Promotions.DISCOUNTS_VIEW);
             if (viewDiscountsPermission is not null && !_permissionRecordCustomerRoleMappingRepository.Table.Any(x => x.CustomerRoleId == vendorRole.Id && x.PermissionRecordId == viewDiscountsPermission.Id))
             {
-                _permissionRecordCustomerRoleMappingRepository.Insert(
+                _dataProvider.InsertEntity(
                         new PermissionRecordCustomerRoleMapping
                         {
                             CustomerRoleId = vendorRole.Id,
@@ -176,7 +179,7 @@ public class AclMigration : Migration
             var crudDiscountsPermission = _permissionRepository.Table.FirstOrDefault(x => x.SystemName == StandardPermission.Promotions.DISCOUNTS_CREATE_EDIT_DELETE);
             if (crudDiscountsPermission is not null && !_permissionRecordCustomerRoleMappingRepository.Table.Any(x => x.CustomerRoleId == vendorRole.Id && x.PermissionRecordId == crudDiscountsPermission.Id))
             {
-                _permissionRecordCustomerRoleMappingRepository.Insert(
+                _dataProvider.InsertEntity(
                         new PermissionRecordCustomerRoleMapping
                         {
                             CustomerRoleId = vendorRole.Id,

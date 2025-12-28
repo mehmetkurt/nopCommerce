@@ -4308,6 +4308,11 @@ label, label + * {
   margin-top: 5px;
 }
 
+.change-password-recovery-link:hover,
+.change-password-recovery-link:focus {
+    color: var(--accent-blue-active-color);
+}
+
 .avatar-page .page-title {
   margin: 0;
 }

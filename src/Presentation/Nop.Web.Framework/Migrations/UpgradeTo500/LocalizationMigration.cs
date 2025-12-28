@@ -1,8 +1,6 @@
 ﻿using FluentMigrator;
-using Nop.Core.Infrastructure;
 using Nop.Data;
 using Nop.Data.Migrations;
-using Nop.Services.Localization;
 using Nop.Web.Framework.Extensions;
 
 namespace Nop.Web.Framework.Migrations.UpgradeTo500;
@@ -16,14 +14,9 @@ public class LocalizationMigration : MigrationBase
         if (!DataSettingsManager.IsDatabaseInstalled())
             return;
 
-        //do not use DI, because it produces exception on the installation process
-        var localizationService = EngineContext.Current.Resolve<ILocalizationService>();
-
-        var (languageId, languages) = this.GetLanguageData();
-
         #region Delete locales
 
-        localizationService.DeleteLocaleResources(new List<string>
+        this.DeleteLocaleResources(new List<string>
         {
             //#7340
             "ActivityLog.AddNewNews",
@@ -153,21 +146,21 @@ public class LocalizationMigration : MigrationBase
 
         #region Rename locales
 
-        this.RenameLocales(new Dictionary<string, string>
-        {
-            
-        }, languages, localizationService);
-        
+        this.RenameLocales(new Dictionary<string, string>());
+
         #endregion
 
         #region Add or update locales
 
-        localizationService.AddOrUpdateLocaleResource(new Dictionary<string, string>
+        this.AddOrUpdateLocaleResource(new Dictionary<string, string>
         {
             //#7898
             ["Admin.Configuration.Settings.Catalog.ArtificialIntelligence.LogRequests"] = "Log AI requests",
             ["Admin.Configuration.Settings.Catalog.ArtificialIntelligence.LogRequests.Hint"] = "Check to enable logging of all requests to AI services.",
-        }, languageId);
+
+            //#7989
+            ["Products.ProductHasBeenUpdatedInTheWishlist.Link"] = "The product has been updated in your <a href=\"{0}\">wishlist</a>",
+        });
 
         #endregion
     }
