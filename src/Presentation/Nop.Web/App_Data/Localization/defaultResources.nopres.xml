@@ -4260,6 +4260,9 @@
   <LocaleResource Name="Admin.Catalog.Products.RelatedProducts.AddNew">
     <Value>Add new related product</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Catalog.Products.RelatedProducts.CyclicallyRelated">
+    <Value>Circular dependency is not allowed for required products (e.g. product A requires product B. And product B requires product A)</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Catalog.Products.RelatedProducts.Fields.DisplayOrder">
     <Value>Display order</Value>
   </LocaleResource>

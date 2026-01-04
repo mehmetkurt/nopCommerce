@@ -160,6 +160,9 @@ public class LocalizationMigration : MigrationBase
 
             //#7989
             ["Products.ProductHasBeenUpdatedInTheWishlist.Link"] = "The product has been updated in your <a href=\"{0}\">wishlist</a>",
+            
+            //#8021
+            ["Admin.Catalog.Products.RelatedProducts.CyclicallyRelated"] = "Circular dependency is not allowed for required products (e.g. product A requires product B. And product B requires product A)",
         });
 
         #endregion
