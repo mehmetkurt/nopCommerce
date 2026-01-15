@@ -163,6 +163,9 @@ public class LocalizationMigration : MigrationBase
             
             //#8021
             ["Admin.Catalog.Products.RelatedProducts.CyclicallyRelated"] = "Circular dependency is not allowed for required products (e.g. product A requires product B. And product B requires product A)",
+
+            //#7906
+            ["Wishlist.DuplicateName"] = "A wishlist with this name already exists.",
         });
 
         #endregion

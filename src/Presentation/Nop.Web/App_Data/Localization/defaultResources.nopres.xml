@@ -20993,6 +20993,9 @@
   <LocaleResource Name="Wishlist.DeleteWishlist">
     <Value>Delete wishlist</Value>
   </LocaleResource>
+  <LocaleResource Name="Wishlist.DuplicateName">
+    <Value>A wishlist with this name already exists.</Value>
+  </LocaleResource>
   <LocaleResource Name="Wishlist.EmailAFriend">
     <Value>Email a friend</Value>
   </LocaleResource>

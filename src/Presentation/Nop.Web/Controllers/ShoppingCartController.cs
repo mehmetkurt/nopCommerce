@@ -1790,8 +1790,20 @@ public partial class ShoppingCartController : BasePublicController
             });
         }
 
-        // Check if customer has reached the maximum number of custom wishlists allowed
         var currentWishlists = await _customWishlistService.GetAllCustomWishlistsAsync(customer.Id);
+        var normalizedName = name.Trim();
+
+        // Check if a wishlist with the same name already exists
+        if (currentWishlists.Any(wishlist => string.Equals(wishlist.Name, normalizedName, StringComparison.InvariantCultureIgnoreCase)))
+        {
+            return Json(new
+            {
+                success = false,
+                message = await _localizationService.GetResourceAsync("Wishlist.DuplicateName")
+            });
+        }
+
+        // Check if customer has reached the maximum number of custom wishlists allowed
         var maximumNumberOfCustomWishlist = _shoppingCartSettings.MaximumNumberOfCustomWishlist;
         if (currentWishlists.Count >= maximumNumberOfCustomWishlist)
         {
@@ -1805,7 +1817,7 @@ public partial class ShoppingCartController : BasePublicController
         var customWishlist = new CustomWishlist
         {
             CustomerId = customer.Id,
-            Name = name.Trim(),
+            Name = normalizedName,
             CreatedOnUtc = DateTime.UtcNow
         };
 
