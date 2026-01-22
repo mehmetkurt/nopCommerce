@@ -654,6 +654,11 @@ public static partial class NopRouteNames
         public const string ADD_WISHLIST = "AddWishlist";
 
         /// <summary>
+        /// Gets the rename custom wishlist route name
+        /// </summary>
+        public const string RENAME_WISHLIST = "RenameWishlist";
+
+        /// <summary>
         /// Gets the back in stock subscribe send route name
         /// </summary>
         public const string BACK_IN_STOCK_SUBSCRIBE_SEND = "BackInStockSubscribeSend";

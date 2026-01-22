@@ -221,6 +221,11 @@ public partial class RouteProvider : BaseRouteProvider, IRouteProvider
             pattern: $"addcustomwishlist",
             defaults: new { controller = "ShoppingCart", action = "AddWishlist" });
 
+        // rename custom wishlist. (AJAX)
+        endpointRouteBuilder.MapControllerRoute(name: NopRouteNames.Ajax.RENAME_WISHLIST,
+            pattern: $"renamecustomwishlist",
+            defaults: new { controller = "ShoppingCart", action = "RenameWishlist" });
+
         //comparing products (AJAX)
         endpointRouteBuilder.MapControllerRoute(name: NopRouteNames.Ajax.ADD_PRODUCT_TO_COMPARE,
             pattern: $"compareproducts/add/{{productId:min(0)}}",

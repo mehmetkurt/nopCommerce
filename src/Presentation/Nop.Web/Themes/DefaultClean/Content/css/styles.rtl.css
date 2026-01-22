@@ -3475,6 +3475,15 @@ label, label + * {
     background-color: #e1133e;
 }
 
+.wishlist-content .rename-wishlist-button {
+  background-color: var(--accent-blue-color);
+}
+
+.wishlist-content .rename-wishlist-button:hover,
+.wishlist-content .rename-wishlist-button:focus {
+  background-color: var(--accent-blue-active-color);
+}
+
 .wishlist-page .share-info {
   text-align: center;
 }
@@ -3508,7 +3517,8 @@ label, label + * {
   display: inline-block;
 }
 
-.add-wishlist-content .wishlist-add-custom-button {
+.add-wishlist-content .wishlist-add-custom-button,
+.rename-wishlist-content .wishlist-rename-custom-button {
   width: auto;
   min-width: 64px;
   min-height: 36px;
@@ -3522,7 +3532,9 @@ label, label + * {
 }
 
 .add-wishlist-content .wishlist-add-custom-button:hover,
-.add-wishlist-content .wishlist-add-custom-button:focus {
+.add-wishlist-content .wishlist-add-custom-button:focus,
+.rename-wishlist-content .wishlist-rename-custom-button:hover,
+.rename-wishlist-content .wishlist-rename-custom-button:focus {
   background-color: var(--accent-blue-active-color);
 }
 

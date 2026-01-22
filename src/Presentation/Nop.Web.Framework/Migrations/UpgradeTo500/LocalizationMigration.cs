@@ -166,6 +166,9 @@ public class LocalizationMigration : MigrationBase
 
             //#7906
             ["Wishlist.DuplicateName"] = "A wishlist with this name already exists.",
+
+            //#7907
+            ["Wishlist.RenameCustomWishlist"] = "Rename wishlist",
         });
 
         #endregion

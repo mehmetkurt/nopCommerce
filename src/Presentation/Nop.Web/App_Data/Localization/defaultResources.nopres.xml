@@ -21059,6 +21059,9 @@
   <LocaleResource Name="Wishlist.NotFound">
     <Value>Wishlist not found.</Value>
   </LocaleResource>
+  <LocaleResource Name="Wishlist.RenameCustomWishlist">
+    <Value>Rename wishlist</Value>
+  </LocaleResource>
   <LocaleResource Name="Wishlist.SelectWishlist">
     <Value>Specify your wishlist</Value>
   </LocaleResource>

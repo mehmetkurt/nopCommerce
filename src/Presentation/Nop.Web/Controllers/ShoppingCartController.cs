@@ -473,6 +473,18 @@ public partial class ShoppingCartController : BasePublicController
         return string.Empty;
     }
 
+    protected virtual async Task<string> CheckDuplicateWishlistNameAsync(int customerId, string wishlistName, IList<CustomWishlist> selectedWishlists = null)
+    {
+        var currentWishlists = selectedWishlists ?? await _customWishlistService.GetAllCustomWishlistsAsync(customerId);
+        if (currentWishlists.Any(wishlist => string.Equals(wishlist.Name, wishlistName, StringComparison.InvariantCultureIgnoreCase)))
+        {
+            var errorMessage = await _localizationService.GetResourceAsync("Wishlist.DuplicateName");
+            return errorMessage;
+        }
+
+        return string.Empty;
+    }
+
     #endregion
 
     #region Shopping cart
@@ -1794,17 +1806,18 @@ public partial class ShoppingCartController : BasePublicController
         var normalizedName = name.Trim();
 
         // Check if a wishlist with the same name already exists
-        if (currentWishlists.Any(wishlist => string.Equals(wishlist.Name, normalizedName, StringComparison.InvariantCultureIgnoreCase)))
+        var errorMessage = await CheckDuplicateWishlistNameAsync(customer.Id, normalizedName, currentWishlists);
+        if (!string.IsNullOrEmpty(errorMessage))
         {
             return Json(new
             {
                 success = false,
-                message = await _localizationService.GetResourceAsync("Wishlist.DuplicateName")
+                message = errorMessage
             });
         }
 
         // Check if customer has reached the maximum number of custom wishlists allowed
-        var maximumNumberOfCustomWishlist = _shoppingCartSettings.MaximumNumberOfCustomWishlist;
+        var maximumNumberOfCustomWishlist = _shoppingCartSettings.MaximumNumberOfCustomWishlist;        
         if (currentWishlists.Count >= maximumNumberOfCustomWishlist)
         {
             return Json(new
@@ -1916,6 +1929,45 @@ public partial class ShoppingCartController : BasePublicController
         });
     }
 
+    [HttpPost]
+    public virtual async Task<IActionResult> RenameWishlist(string wishlistName, int wishlistId)
+    {
+        var customer = await _workContext.GetCurrentCustomerAsync();
+        var wishlist = await _customWishlistService.GetCustomWishlistByIdAsync(wishlistId);
+
+        if (wishlist == null || wishlist.CustomerId != customer.Id)
+        {
+            return Json(new
+            {
+                success = false,
+                message = await _localizationService.GetResourceAsync("Wishlist.NotFound")
+            });
+        }
+
+        var normalizedName = wishlistName.Trim();
+
+        // Check if a wishlist with the same name already exists
+        var errorMessage = await CheckDuplicateWishlistNameAsync(customer.Id, normalizedName);
+        if (!string.IsNullOrEmpty(errorMessage))
+        {
+            return Json(new
+            {
+                success = false,
+                message = errorMessage
+            });
+        }
+
+        // rename a wishlist
+        wishlist.Name = normalizedName;
+        await _customWishlistService.UpdateCustomWishlistAsync(wishlist);
+
+        return Json(new
+        {
+            success = true,
+            redirect = Url.RouteUrl(NopRouteNames.General.WISHLIST, new { list = wishlistId })
+        });
+    }
+    
     [HttpPost]
     public virtual async Task<IActionResult> DeleteWishlist(int wishlistId)
     {
