@@ -18,7 +18,6 @@ using Nop.Core.Domain.Media;
 using Nop.Core.Domain.Menus;
 using Nop.Core.Domain.Messages;
 using Nop.Core.Domain.Orders;
-using Nop.Core.Domain.Polls;
 using Nop.Core.Domain.ScheduleTasks;
 using Nop.Core.Domain.Security;
 using Nop.Core.Domain.Seo;
@@ -55,7 +54,6 @@ using Nop.Web.Areas.Admin.Models.MultiFactorAuthentication;
 using Nop.Web.Areas.Admin.Models.Orders;
 using Nop.Web.Areas.Admin.Models.Payments;
 using Nop.Web.Areas.Admin.Models.Plugins;
-using Nop.Web.Areas.Admin.Models.Polls;
 using Nop.Web.Areas.Admin.Models.Settings;
 using Nop.Web.Areas.Admin.Models.Shipping;
 using Nop.Web.Areas.Admin.Models.ShoppingCart;
@@ -102,7 +100,6 @@ public partial class AdminMapperConfiguration : Profile, IOrderedMapperProfile
         CreateOrdersMaps();
         CreatePaymentsMaps();
         CreatePluginsMaps();
-        CreatePollsMaps();
         CreateSecurityMaps();
         CreateSeoMaps();
         CreateShippingMaps();
@@ -1485,21 +1482,6 @@ public partial class AdminMapperConfiguration : Profile, IOrderedMapperProfile
         CreateMap<PluginDescriptor, PluginModel>()
             .ForMember(model => model.CanChangeEnabled, options => options.Ignore())
             .ForMember(model => model.IsEnabled, options => options.Ignore());
-    }
-
-    /// <summary>
-    /// Create polls maps 
-    /// </summary>
-    protected virtual void CreatePollsMaps()
-    {
-        CreateMap<PollAnswer, PollAnswerModel>();
-        CreateMap<PollAnswerModel, PollAnswer>();
-
-        CreateMap<Poll, PollModel>()
-            .ForMember(model => model.AvailableLanguages, options => options.Ignore())
-            .ForMember(model => model.PollAnswerSearchModel, options => options.Ignore())
-            .ForMember(model => model.LanguageName, options => options.Ignore());
-        CreateMap<PollModel, Poll>();
     }
 
     /// <summary>

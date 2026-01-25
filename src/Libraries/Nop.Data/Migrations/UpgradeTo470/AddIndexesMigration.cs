@@ -5,7 +5,6 @@ using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Forums;
 using Nop.Core.Domain.Logging;
 using Nop.Core.Domain.Orders;
-using Nop.Core.Domain.Polls;
 using Nop.Data.Mapping;
 
 namespace Nop.Data.Migrations.UpgradeTo470;
@@ -79,12 +78,6 @@ public class AddIndexesMigration : ForwardOnlyMigration
             IfDatabase(databaseType).Create.Index("IX_ForumSubscription_CustomerId")
                 .OnTable(NameCompatibilityManager.GetTableName(typeof(ForumSubscription)))
                 .OnColumn(nameof(ForumSubscription.CustomerId)).Ascending()
-                .WithOptions().NonClustered();
-
-        if (!Schema.Table(nameof(PollVotingRecord)).Index("IX_PollVotingRecord_CustomerId").Exists())
-            IfDatabase(databaseType).Create.Index("IX_PollVotingRecord_CustomerId")
-                .OnTable(nameof(PollVotingRecord))
-                .OnColumn(nameof(PollVotingRecord.CustomerId)).Ascending()
                 .WithOptions().NonClustered();
 
         if (!Schema.Table(nameof(Order)).Index("IX_Order_CustomerId").Exists())

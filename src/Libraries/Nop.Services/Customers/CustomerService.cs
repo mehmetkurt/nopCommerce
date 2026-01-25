@@ -7,7 +7,6 @@ using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Forums;
 using Nop.Core.Domain.Orders;
-using Nop.Core.Domain.Polls;
 using Nop.Core.Domain.Shipping;
 using Nop.Core.Domain.Tax;
 using Nop.Core.Events;
@@ -42,7 +41,6 @@ public partial class CustomerService : ICustomerService
     protected readonly IRepository<Order> _orderRepository;
     protected readonly IRepository<ProductReview> _productReviewRepository;
     protected readonly IRepository<ProductReviewHelpfulness> _productReviewHelpfulnessRepository;
-    protected readonly IRepository<PollVotingRecord> _pollVotingRecordRepository;
     protected readonly IRepository<ShoppingCartItem> _shoppingCartRepository;
     protected readonly IShortTermCacheManager _shortTermCacheManager;
     protected readonly IStaticCacheManager _staticCacheManager;
@@ -71,7 +69,6 @@ public partial class CustomerService : ICustomerService
         IRepository<Order> orderRepository,
         IRepository<ProductReview> productReviewRepository,
         IRepository<ProductReviewHelpfulness> productReviewHelpfulnessRepository,
-        IRepository<PollVotingRecord> pollVotingRecordRepository,
         IRepository<ShoppingCartItem> shoppingCartRepository,
         IShortTermCacheManager shortTermCacheManager,
         IStaticCacheManager staticCacheManager,
@@ -96,7 +93,6 @@ public partial class CustomerService : ICustomerService
         _orderRepository = orderRepository;
         _productReviewRepository = productReviewRepository;
         _productReviewHelpfulnessRepository = productReviewHelpfulnessRepository;
-        _pollVotingRecordRepository = pollVotingRecordRepository;
         _shoppingCartRepository = shoppingCartRepository;
         _shortTermCacheManager = shortTermCacheManager;
         _staticCacheManager = staticCacheManager;
@@ -689,12 +685,11 @@ public partial class CustomerService : ICustomerService
             from blogComment in _blogCommentRepository.Table.Where(o => o.CustomerId == guest.Id).DefaultIfEmpty()
             from productReview in _productReviewRepository.Table.Where(o => o.CustomerId == guest.Id).DefaultIfEmpty()
             from productReviewHelpfulness in _productReviewHelpfulnessRepository.Table.Where(o => o.CustomerId == guest.Id).DefaultIfEmpty()
-            from pollVotingRecord in _pollVotingRecordRepository.Table.Where(o => o.CustomerId == guest.Id).DefaultIfEmpty()
             from forumTopic in _forumTopicRepository.Table.Where(o => o.CustomerId == guest.Id).DefaultIfEmpty()
             from forumPost in _forumPostRepository.Table.Where(o => o.CustomerId == guest.Id).DefaultIfEmpty()
             where (!onlyWithoutShoppingCart || sCart == null) &&
                   order == null && blogComment == null && productReview == null && productReviewHelpfulness == null &&
-                  pollVotingRecord == null && forumTopic == null && forumPost == null &&
+                  forumTopic == null && forumPost == null &&
                   !guest.IsSystemAccount &&
                   (createdFromUtc == null || guest.CreatedOnUtc > createdFromUtc) &&
                   (createdToUtc == null || guest.CreatedOnUtc < createdToUtc)

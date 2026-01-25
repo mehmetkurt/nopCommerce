@@ -11522,123 +11522,6 @@
   <LocaleResource Name="Admin.ContentManagement.MessageTemplates.Updated">
     <Value>The message template has been updated successfully.</Value>
   </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls">
-    <Value>Polls</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Added">
-    <Value>The new poll has been added successfully.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.AddNew">
-    <Value>Add a new poll</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Answers">
-    <Value>Poll answers</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Answers.Fields.DisplayOrder">
-    <Value>Display order</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Answers.Fields.DisplayOrder.Hint">
-    <Value>The display order of this poll answer. 1 represents the top of the list.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Answers.Fields.Name">
-    <Value>Name</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Answers.Fields.Name.Hint">
-    <Value>Enter the poll answer name.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Answers.Fields.Name.Required">
-    <Value>Name is required.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Answers.Fields.NumberOfVotes">
-    <Value>Number of votes</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Answers.SaveBeforeEdit">
-    <Value>You need to save the poll before you can add answers for this poll page.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.BackToList">
-    <Value>back to poll list</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Deleted">
-    <Value>The poll has been deleted successfully.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.EditPollDetails">
-    <Value>Edit poll details</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.AllowGuestsToVote">
-    <Value>Allow guests to vote</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.AllowGuestsToVote.Hint">
-    <Value>Check to allow guests to vote.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.DisplayOrder">
-    <Value>Display order</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.DisplayOrder.Hint">
-    <Value>The display order of this poll. 1 represents the top of the list.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.EndDate">
-    <Value>End date</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.EndDate.Hint">
-    <Value>Set the poll end date in Coordinated Universal Time (UTC). You can also leave it empty.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.Language">
-    <Value>Language</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.Language.Hint">
-    <Value>The language of this poll. A customer will only see the polls for their selected language.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.LimitedToStores">
-    <Value>Limited to stores</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.LimitedToStores.Hint">
-    <Value>Option to limit this poll to a certain store. If you have multiple stores, choose one or several from the list. If you don't use this option just leave this field empty.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.Name">
-    <Value>Name</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.Name.Hint">
-    <Value>The name of this poll.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.Name.Required">
-    <Value>Name is required.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.Published">
-    <Value>Published</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.Published.Hint">
-    <Value>Determines whether this poll is published (visible) in your store.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.ShowOnHomepage">
-    <Value>Show on home page</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.ShowOnHomepage.Hint">
-    <Value>Check if you want to show poll on the home page.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.StartDate">
-    <Value>Start date</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.StartDate.Hint">
-    <Value>Set the poll start date in Coordinated Universal Time (UTC). You can also leave it empty.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.SystemKeyword">
-    <Value>System keyword</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Fields.SystemKeyword.Hint">
-    <Value>The system keyword for this poll. For example, you can enter 'LeftColumnPoll' in order to display it in the left column.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Info">
-    <Value>Poll Info</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.List.SearchStore">
-    <Value>Store</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.List.SearchStore.Hint">
-    <Value>Search by a specific store.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ContentManagement.Polls.Updated">
-    <Value>The poll has been updated successfully.</Value>
-  </LocaleResource>
   <LocaleResource Name="Admin.ContentManagement.Topics">
     <Value>Topics (pages)</Value>
   </LocaleResource>
@@ -12949,9 +12832,6 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Documentation.Reference.Plugins">
     <Value><![CDATA[Learn more about <a target="_blank" href="{0}">plugins in nopCommerce</a>]]></Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.Documentation.Reference.Polls">
-    <Value><![CDATA[Learn more about <a target="_blank" href="{0}">polls</a>]]></Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Documentation.Reference.ProductAttributes">
     <Value><![CDATA[Learn more about <a target="_blank" href="{0}">product attributes</a>]]></Value>
@@ -19403,24 +19283,6 @@
   <LocaleResource Name="Pdf.TaxRate">
     <Value>Tax {0}%</Value>
   </LocaleResource>
-  <LocaleResource Name="Polls.OnlyRegisteredUsersVote">
-    <Value>Only registered users can vote.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Polls.SelectAnswer">
-    <Value>Please select an answer</Value>
-  </LocaleResource>
-  <LocaleResource Name="Polls.Title">
-    <Value>Community poll</Value>
-  </LocaleResource>
-  <LocaleResource Name="Polls.TotalVotes">
-    <Value>{0} vote(s)...</Value>
-  </LocaleResource>
-  <LocaleResource Name="Polls.Vote">
-    <Value>Vote</Value>
-  </LocaleResource>
-  <LocaleResource Name="Polls.VotesResultLine">
-    <Value>{0} ({1} vote(s) - {2}%)</Value>
-  </LocaleResource>
   <LocaleResource Name="PrivateMessages.Inbox">
     <Value>Inbox</Value>
   </LocaleResource>
@@ -20248,12 +20110,6 @@
   </LocaleResource>
   <LocaleResource Name="Security.Permission.ContentManagement.MessageTemplatesView">
     <Value>Admin area. Message Templates. View</Value>
-  </LocaleResource>
-  <LocaleResource Name="Security.Permission.ContentManagement.PollsCreateEditDelete">
-    <Value>Admin area. Polls. Create, edit, delete</Value>
-  </LocaleResource>
-  <LocaleResource Name="Security.Permission.ContentManagement.PollsView">
-    <Value>Admin area. Polls. View</Value>
   </LocaleResource>
   <LocaleResource Name="Security.Permission.ContentManagement.TopicsCreateEditDelete">
     <Value>Admin area. Topics. Create, edit, delete</Value>
