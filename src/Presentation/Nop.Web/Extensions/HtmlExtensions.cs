@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core;
 using Nop.Core.Http;
 using Nop.Core.Infrastructure;
+using Nop.Services.Helpers;
 using Nop.Services.Localization;
 using Nop.Services.Themes;
 using Nop.Web.Framework.Extensions;
@@ -51,21 +52,13 @@ public static class HtmlExtensions
 
         // Convert month
         if (currentFormat.Contains("MMMM"))
-        {
             currentFormat = currentFormat.Replace("MMMM", "MM");
-        }
         else if (currentFormat.Contains("MMM"))
-        {
             currentFormat = currentFormat.Replace("MMM", "M");
-        }
         else if (currentFormat.Contains("MM"))
-        {
             currentFormat = currentFormat.Replace("MM", "mm");
-        }
         else
-        {
             currentFormat = currentFormat.Replace("M", "m");
-        }
 
         // Convert year
         currentFormat = currentFormat.Contains("yyyy") ?

@@ -7,6 +7,7 @@ using Nop.Core.Http;
 using Nop.Core.Rss;
 using Nop.Services.Customers;
 using Nop.Services.Forums;
+using Nop.Services.Helpers;
 using Nop.Services.Localization;
 using Nop.Web.Factories;
 using Nop.Web.Framework.Mvc;
@@ -348,10 +349,12 @@ public partial class BoardsController : BasePublicController
     public virtual async Task<IActionResult> TopicDelete(int id)
     {
         if (!_forumSettings.ForumsEnabled)
+        {
             return Json(new
             {
                 redirect = Url.RouteUrl(NopRouteNames.General.HOMEPAGE),
             });
+        }
 
         var forumTopic = await _forumService.GetTopicByIdAsync(id);
         if (forumTopic != null)
@@ -364,10 +367,12 @@ public partial class BoardsController : BasePublicController
             await _forumService.DeleteTopicAsync(forumTopic);
 
             if (forum != null)
+            {
                 return Json(new
                 {
                     redirect = Url.RouteUrl(NopRouteNames.Standard.FORUM_SLUG, new { id = forum.Id, slug = await _forumService.GetForumSeNameAsync(forum) }),
                 });
+            }
         }
 
         return Json(new
@@ -406,9 +411,7 @@ public partial class BoardsController : BasePublicController
 
         //validate CAPTCHA
         if (_captchaSettings.Enabled && _captchaSettings.ShowOnForum && !captchaValid)
-        {
             ModelState.AddModelError("", await _localizationService.GetResourceAsync("Common.WrongCaptchaMessage"));
-        }
 
         if (ModelState.IsValid)
         {
@@ -416,16 +419,12 @@ public partial class BoardsController : BasePublicController
             {
                 var customer = await _workContext.GetCurrentCustomerAsync();
                 if (!await _forumService.IsCustomerAllowedToCreateTopicAsync(customer, forum))
-                {
                     return Challenge();
-                }
 
                 var subject = model.Subject;
                 var maxSubjectLength = _forumSettings.TopicSubjectMaxLength;
                 if (maxSubjectLength > 0 && subject.Length > maxSubjectLength)
-                {
                     subject = subject[0..maxSubjectLength];
-                }
 
                 var text = model.Text;
                 var maxPostLength = _forumSettings.PostMaxLength;
@@ -537,9 +536,7 @@ public partial class BoardsController : BasePublicController
 
         //validate CAPTCHA
         if (_captchaSettings.Enabled && _captchaSettings.ShowOnForum && !captchaValid)
-        {
             ModelState.AddModelError("", await _localizationService.GetResourceAsync("Common.WrongCaptchaMessage"));
-        }
 
         if (ModelState.IsValid)
         {
@@ -552,9 +549,7 @@ public partial class BoardsController : BasePublicController
                 var subject = model.Subject;
                 var maxSubjectLength = _forumSettings.TopicSubjectMaxLength;
                 if (maxSubjectLength > 0 && subject.Length > maxSubjectLength)
-                {
                     subject = subject[0..maxSubjectLength];
-                }
 
                 var text = model.Text;
                 var maxPostLength = _forumSettings.PostMaxLength;
@@ -619,9 +614,7 @@ public partial class BoardsController : BasePublicController
                     else
                     {
                         if (forumSubscription != null)
-                        {
                             await _forumService.DeleteSubscriptionAsync(forumSubscription);
-                        }
                     }
                 }
 
@@ -644,10 +637,12 @@ public partial class BoardsController : BasePublicController
     public virtual async Task<IActionResult> PostDelete(int id)
     {
         if (!_forumSettings.ForumsEnabled)
+        {
             return Json(new
             {
                 redirect = Url.RouteUrl(NopRouteNames.General.HOMEPAGE),
             });
+        }
 
         var forumPost = await _forumService.GetPostByIdAsync(id);
 
@@ -667,10 +662,12 @@ public partial class BoardsController : BasePublicController
         //get topic one more time because it can be deleted (first or only post deleted)
         forumTopic = await _forumService.GetTopicByIdAsync(forumPost.TopicId);
         if (forumTopic == null)
+        {
             return Json(new
             {
                 redirect = Url.RouteUrl(NopRouteNames.Standard.FORUM_SLUG, new { id = forumId, slug = forumSlug }),
             });
+        }
 
         return Json(new
         {
@@ -709,9 +706,7 @@ public partial class BoardsController : BasePublicController
 
         //validate CAPTCHA
         if (_captchaSettings.Enabled && _captchaSettings.ShowOnForum && !captchaValid)
-        {
             ModelState.AddModelError("", await _localizationService.GetResourceAsync("Common.WrongCaptchaMessage"));
-        }
 
         if (ModelState.IsValid)
         {
@@ -762,9 +757,7 @@ public partial class BoardsController : BasePublicController
                     else
                     {
                         if (forumSubscription != null)
-                        {
                             await _forumService.DeleteSubscriptionAsync(forumSubscription);
-                        }
                     }
                 }
 
@@ -832,9 +825,7 @@ public partial class BoardsController : BasePublicController
 
         //validate CAPTCHA
         if (_captchaSettings.Enabled && _captchaSettings.ShowOnForum && !captchaValid)
-        {
             ModelState.AddModelError("", await _localizationService.GetResourceAsync("Common.WrongCaptchaMessage"));
-        }
 
         if (ModelState.IsValid)
         {
@@ -845,9 +836,7 @@ public partial class BoardsController : BasePublicController
                 var text = model.Text;
                 var maxPostLength = _forumSettings.PostMaxLength;
                 if (maxPostLength > 0 && text.Length > maxPostLength)
-                {
                     text = text[0..maxPostLength];
-                }
 
                 forumPost.UpdatedOnUtc = nowUtc;
                 forumPost.Text = text;
@@ -875,9 +864,7 @@ public partial class BoardsController : BasePublicController
                     else
                     {
                         if (forumSubscription != null)
-                        {
                             await _forumService.DeleteSubscriptionAsync(forumSubscription);
-                        }
                     }
                 }
 
@@ -885,13 +872,9 @@ public partial class BoardsController : BasePublicController
                 var pageIndex = (await _forumService.CalculateTopicPageIndexAsync(forumPost.TopicId, pageSize, forumPost.Id) + 1);
                 string url;
                 if (pageIndex > 1)
-                {
                     url = Url.RouteUrl(NopRouteNames.Standard.TOPIC_SLUG_PAGED, new { id = forumPost.TopicId, slug = await _forumService.GetTopicSeNameAsync(forumTopic), pageNumber = pageIndex });
-                }
                 else
-                {
                     url = Url.RouteUrl(NopRouteNames.Standard.TOPIC_SLUG, new { id = forumPost.TopicId, slug = await _forumService.GetTopicSeNameAsync(forumTopic) });
-                }
                 return LocalRedirect($"{url}#{forumPost.Id}");
             }
             catch (Exception ex)
@@ -943,9 +926,7 @@ public partial class BoardsController : BasePublicController
                     var customer = await _workContext.GetCurrentCustomerAsync();
 
                     if (forumSubscription != null && forumSubscription.CustomerId == customer.Id)
-                    {
                         await _forumService.DeleteSubscriptionAsync(forumSubscription);
-                    }
                 }
             }
         }
@@ -965,39 +946,47 @@ public partial class BoardsController : BasePublicController
 
         var customer = await _workContext.GetCurrentCustomerAsync();
         if (!await _customerService.IsRegisteredAsync(customer))
+        {
             return Json(new
             {
                 Error = await _localizationService.GetResourceAsync("Forum.Votes.Login"),
                 VoteCount = forumPost.VoteCount
             });
+        }
 
         if (customer.Id == forumPost.CustomerId)
+        {
             return Json(new
             {
                 Error = await _localizationService.GetResourceAsync("Forum.Votes.OwnPost"),
                 VoteCount = forumPost.VoteCount
             });
+        }
 
         var forumPostVote = await _forumService.GetPostVoteAsync(postId, customer);
         if (forumPostVote != null)
         {
             if ((forumPostVote.IsUp && isUp) || (!forumPostVote.IsUp && !isUp))
+            {
                 return Json(new
                 {
                     Error = await _localizationService.GetResourceAsync("Forum.Votes.AlreadyVoted"),
                     VoteCount = forumPost.VoteCount
                 });
+            }
 
             await _forumService.DeletePostVoteAsync(forumPostVote);
             return Json(new { VoteCount = forumPost.VoteCount });
         }
 
         if (await _forumService.GetNumberOfPostVotesAsync(customer, DateTime.UtcNow.AddDays(-1)) >= _forumSettings.MaxVotesPerDay)
+        {
             return Json(new
             {
                 Error = string.Format(await _localizationService.GetResourceAsync("Forum.Votes.MaxVotesReached"), _forumSettings.MaxVotesPerDay),
                 VoteCount = forumPost.VoteCount
             });
+        }
 
         await _forumService.InsertPostVoteAsync(new ForumPostVote
         {

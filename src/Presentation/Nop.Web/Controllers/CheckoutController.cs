@@ -14,6 +14,7 @@ using Nop.Services.Catalog;
 using Nop.Services.Common;
 using Nop.Services.Customers;
 using Nop.Services.Directory;
+using Nop.Services.Helpers;
 using Nop.Services.Localization;
 using Nop.Services.Orders;
 using Nop.Services.Payments;
@@ -405,15 +406,11 @@ public partial class CheckoutController : BasePublicController
                 .FirstOrDefault();
         }
         if (order == null || order.Deleted || customer.Id != order.CustomerId)
-        {
             return RedirectToRoute(NopRouteNames.General.HOMEPAGE);
-        }
 
         //disable "order completed" page?
         if (_orderSettings.DisableOrderCompletedPage)
-        {
             return RedirectToRoute(NopRouteNames.Standard.ORDER_DETAILS, new { orderId = order.Id });
-        }
 
         //model
         var model = await _checkoutModelFactory.PrepareCheckoutCompletedModelAsync(order);
@@ -552,10 +549,12 @@ public partial class CheckoutController : BasePublicController
             await _customerService.UpdateCustomerAsync(customer);
 
             if (!opc)
+            {
                 return Json(new
                 {
                     redirect = Url.RouteUrl(NopRouteNames.Standard.CHECKOUT_SHIPPING_ADDRESS)
                 });
+            }
 
             var shippingAddressModel = new CheckoutShippingAddressModel();
             await _checkoutModelFactory.PrepareShippingAddressModelAsync(shippingAddressModel, cart, address.CountryId);
@@ -683,9 +682,7 @@ public partial class CheckoutController : BasePublicController
         var customAttributes = await _addressAttributeParser.ParseCustomAttributesAsync(form, NopCommonDefaults.AddressAttributeControlName);
         var customAttributeWarnings = await _addressAttributeParser.GetAttributeWarningsAsync(customAttributes);
         foreach (var error in customAttributeWarnings)
-        {
             ModelState.AddModelError("", error);
-        }
 
         var newAddress = model.BillingNewAddress;
 
@@ -844,9 +841,7 @@ public partial class CheckoutController : BasePublicController
         var customAttributes = await _addressAttributeParser.ParseCustomAttributesAsync(form, NopCommonDefaults.AddressAttributeControlName);
         var customAttributeWarnings = await _addressAttributeParser.GetAttributeWarningsAsync(customAttributes);
         foreach (var error in customAttributeWarnings)
-        {
             ModelState.AddModelError("", error);
-        }
 
         var newAddress = model.ShippingNewAddress;
 
@@ -1055,9 +1050,7 @@ public partial class CheckoutController : BasePublicController
         //filter by country
         var filterByCountryId = 0;
         if (_addressSettings.CountryEnabled)
-        {
             filterByCountryId = (await _customerService.GetCustomerBillingAddressAsync(customer))?.CountryId ?? 0;
-        }
 
         //model
         var paymentMethodModel = await _checkoutModelFactory.PreparePaymentMethodModelAsync(cart, filterByCountryId);
@@ -1151,9 +1144,7 @@ public partial class CheckoutController : BasePublicController
         //Check whether payment workflow is required
         var isPaymentWorkflowRequired = await _orderProcessingService.IsPaymentWorkflowRequiredAsync(cart);
         if (!isPaymentWorkflowRequired)
-        {
             return RedirectToRoute(NopRouteNames.Standard.CHECKOUT_CONFIRM);
-        }
 
         //load payment method
         var paymentMethodSystemName = await _genericAttributeService.GetAttributeAsync<string>(customer,
@@ -1202,9 +1193,7 @@ public partial class CheckoutController : BasePublicController
         //Check whether payment workflow is required
         var isPaymentWorkflowRequired = await _orderProcessingService.IsPaymentWorkflowRequiredAsync(cart);
         if (!isPaymentWorkflowRequired)
-        {
             return RedirectToRoute(NopRouteNames.Standard.CHECKOUT_CONFIRM);
-        }
 
         //load payment method
         var paymentMethodSystemName = await _genericAttributeService.GetAttributeAsync<string>(customer,
@@ -1387,9 +1376,7 @@ public partial class CheckoutController : BasePublicController
             //filter by country
             var filterByCountryId = 0;
             if (_addressSettings.CountryEnabled)
-            {
                 filterByCountryId = (await _customerService.GetCustomerBillingAddressAsync(customer))?.CountryId ?? 0;
-            }
 
             //payment is required
             var paymentMethodModel = await _checkoutModelFactory.PreparePaymentMethodModelAsync(cart, filterByCountryId);
@@ -1546,9 +1533,7 @@ public partial class CheckoutController : BasePublicController
                 var customAttributes = await _addressAttributeParser.ParseCustomAttributesAsync(form, NopCommonDefaults.AddressAttributeControlName);
                 var customAttributeWarnings = await _addressAttributeParser.GetAttributeWarningsAsync(customAttributes);
                 foreach (var error in customAttributeWarnings)
-                {
                     ModelState.AddModelError("", error);
-                }
 
                 //validate model
                 if (!ModelState.IsValid)
@@ -1714,9 +1699,7 @@ public partial class CheckoutController : BasePublicController
                 var customAttributes = await _addressAttributeParser.ParseCustomAttributesAsync(form, NopCommonDefaults.AddressAttributeControlName);
                 var customAttributeWarnings = await _addressAttributeParser.GetAttributeWarningsAsync(customAttributes);
                 foreach (var error in customAttributeWarnings)
-                {
                     ModelState.AddModelError("", error);
-                }
 
                 //validate model
                 if (!ModelState.IsValid)
@@ -2040,9 +2023,7 @@ public partial class CheckoutController : BasePublicController
                 {
                     //Check whether payment workflow is required
                     if (await _orderProcessingService.IsPaymentWorkflowRequiredAsync(cart))
-                    {
                         throw new Exception("Payment information is not entered");
-                    }
 
                     processPaymentRequest = new ProcessPaymentRequest();
                 }
@@ -2090,9 +2071,7 @@ public partial class CheckoutController : BasePublicController
                     confirmOrderModel.Warnings.Add(error);
             }
             else
-            {
                 confirmOrderModel.Warnings.Add(await _localizationService.GetResourceAsync("Common.WrongCaptchaMessage"));
-            }
 
             return Json(new
             {
