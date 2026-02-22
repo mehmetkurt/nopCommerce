@@ -3,7 +3,6 @@ using Nop.Core;
 using Nop.Core.Domain;
 using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Customers;
-using Nop.Core.Domain.Forums;
 using Nop.Core.Domain.Localization;
 using Nop.Core.Domain.Vendors;
 using Nop.Services.Configuration;
@@ -21,9 +20,9 @@ public class CommonModelFactoryTests : BaseNopTest
     private LocalizationSettings _localizationSettings;
     private IWorkContext _workContext;
     private CustomerSettings _customerSettings;
-    private ForumSettings _forumSettings;
     private StoreInformationSettings _storeInformationSettings;
     private CommonSettings _commonSettings;
+    private PrivateMessageSettings _privateMessageSettings;
     private Vendor _vendor;
     private ISettingService _settingsService;
 
@@ -32,12 +31,13 @@ public class CommonModelFactoryTests : BaseNopTest
     {
         _settingsService = GetService<ISettingService>();
         _localizationSettings = GetService<LocalizationSettings>();
-        _forumSettings = GetService<ForumSettings>();
 
         _localizationSettings.SeoFriendlyUrlsForLanguagesEnabled = true;
         await _settingsService.SaveSettingAsync(_localizationSettings);
-        _forumSettings.AllowPrivateMessages = true;
-        await _settingsService.SaveSettingAsync(_forumSettings);
+
+        _privateMessageSettings = GetService<PrivateMessageSettings>();
+        _privateMessageSettings.AllowPrivateMessages = true;
+        await _settingsService.SaveSettingAsync(_privateMessageSettings);
 
         _commonModelFactory = GetService<ICommonModelFactory>();
 
@@ -55,8 +55,8 @@ public class CommonModelFactoryTests : BaseNopTest
     {
         _localizationSettings.SeoFriendlyUrlsForLanguagesEnabled = false;
         await _settingsService.SaveSettingAsync(_localizationSettings);
-        _forumSettings.AllowPrivateMessages = false;
-        await _settingsService.SaveSettingAsync(_forumSettings);
+        _privateMessageSettings.AllowPrivateMessages = false;
+        await _settingsService.SaveSettingAsync(_privateMessageSettings);
     }
 
     [Test]
@@ -111,7 +111,7 @@ public class CommonModelFactoryTests : BaseNopTest
         model.CustomerName.Should().Be("John");
         model.ShoppingCartEnabled.Should().BeTrue();
         model.WishlistEnabled.Should().BeTrue();
-        model.AllowPrivateMessages.Should().Be(_forumSettings.AllowPrivateMessages);
+        model.AllowPrivateMessages.Should().Be(_privateMessageSettings.AllowPrivateMessages);
         model.UnreadPrivateMessages.Should().BeEmpty();
         model.AlertMessage.Should().BeEmpty();
         model.ShoppingCartItems.Should().Be(0);
@@ -255,17 +255,13 @@ public class CommonModelFactoryTests : BaseNopTest
             "Disallow: /country/getstatesbycountryid/", "Disallow: /eucookielawaccept",
             "Disallow: /topic/authenticate", "Disallow: /category/products/", "Disallow: /product/combinations",
             "Disallow: /uploadfileproductattribute/*", "Disallow: /shoppingcart/productdetails_attributechange/*",
-            "Disallow: /uploadfilereturnrequest", "Disallow: /boards/topicwatch/*",
-            "Disallow: /boards/forumwatch/*", "Disallow: /install/restartapplication", "Disallow: /boards/postvote",
+            "Disallow: /uploadfilereturnrequest", "Disallow: /install/restartapplication", 
             "Disallow: /product/estimateshipping/*", "Disallow: /shoppingcart/checkoutattributechange/*",
             "Disallow: /addproducttocart/catalog/", "Disallow: /addproducttocart/details/",
-            "Disallow: /backinstocksubscriptions/manage", "Disallow: /boards/forumsubscriptions",
-            "Disallow: /boards/forumwatch", "Disallow: /boards/postedit", "Disallow: /boards/postdelete",
-            "Disallow: /boards/postcreate", "Disallow: /boards/topicedit", "Disallow: /boards/topicdelete",
-            "Disallow: /boards/topiccreate", "Disallow: /boards/topicmove", "Disallow: /boards/topicwatch",
-            "Disallow: /cart$", "Disallow: /changecurrency", "Disallow: /changelanguage",
-            "Disallow: /changetaxtype", "Disallow: /checkout", "Disallow: /checkout/billingaddress",
-            "Disallow: /checkout/completed", "Disallow: /checkout/confirm", "Disallow: /checkout/shippingaddress",
+            "Disallow: /backinstocksubscriptions/manage", "Disallow: /cart$", "Disallow: /changecurrency", 
+            "Disallow: /changelanguage", "Disallow: /changetaxtype", "Disallow: /checkout", 
+            "Disallow: /checkout/billingaddress", "Disallow: /checkout/completed", 
+            "Disallow: /checkout/confirm", "Disallow: /checkout/shippingaddress",
             "Disallow: /checkout/shippingmethod", "Disallow: /checkout/paymentinfo",
             "Disallow: /checkout/paymentmethod", "Disallow: /clearcomparelist", "Disallow: /compareproducts",
             "Disallow: /compareproducts/add/*", "Disallow: /customer/avatar", "Disallow: /customer/activation",
@@ -282,10 +278,6 @@ public class CommonModelFactoryTests : BaseNopTest
             "Disallow: /uploadfilecheckoutattribute", "Disallow: /uploadfileproductattribute",
             "Disallow: /uploadfilereturnrequest", "Disallow: /wishlist", "Disallow: /en/addproducttocart/catalog/",
             "Disallow: /en/addproducttocart/details/", "Disallow: /en/backinstocksubscriptions/manage",
-            "Disallow: /en/boards/forumsubscriptions", "Disallow: /en/boards/forumwatch",
-            "Disallow: /en/boards/postedit", "Disallow: /en/boards/postdelete", "Disallow: /en/boards/postcreate",
-            "Disallow: /en/boards/topicedit", "Disallow: /en/boards/topicdelete",
-            "Disallow: /en/boards/topiccreate", "Disallow: /en/boards/topicmove", "Disallow: /en/boards/topicwatch",
             "Disallow: /en/cart$", "Disallow: /en/changecurrency", "Disallow: /en/changelanguage",
             "Disallow: /en/changetaxtype", "Disallow: /en/checkout", "Disallow: /en/checkout/billingaddress",
             "Disallow: /en/checkout/completed", "Disallow: /en/checkout/confirm",
