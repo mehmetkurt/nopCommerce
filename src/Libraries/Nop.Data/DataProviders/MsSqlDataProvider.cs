@@ -34,7 +34,7 @@ public partial class MsSqlNopDataProvider : BaseDataProvider, INopDataProvider
     {
         ArgumentException.ThrowIfNullOrEmpty(connectionString);
 
-        return new SqlConnection(connectionString);
+        return new SqlConnection(connectionString){};
     }
 
     #endregion
@@ -325,41 +325,6 @@ public partial class MsSqlNopDataProvider : BaseDataProvider, INopDataProvider
     public virtual string GetIndexName(string targetTable, string targetColumn)
     {
         return $"IX_{targetTable}_{targetColumn}";
-    }
-
-    /// <summary>
-    /// Updates records in table, using values from entity parameter.
-    /// Records to update are identified by match on primary key value from obj value.
-    /// </summary>
-    /// <param name="entities">Entities with data to update</param>
-    /// <typeparam name="TEntity">Entity type</typeparam>
-    /// <returns>A task that represents the asynchronous operation</returns>
-    public override async Task UpdateEntitiesAsync<TEntity>(IEnumerable<TEntity> entities)
-    {
-        using var dataContext = CreateDataConnection();
-        await dataContext.GetTable<TEntity>()
-            .Merge()
-            .Using(entities)
-            .OnTargetKey()
-            .UpdateWhenMatched()
-            .MergeAsync();
-    }
-
-    /// <summary>
-    /// Updates records in table, using values from entity parameter.
-    /// Records to update are identified by match on primary key value from obj value.
-    /// </summary>
-    /// <param name="entities">Entities with data to update</param>
-    /// <typeparam name="TEntity">Entity type</typeparam>
-    public override void UpdateEntities<TEntity>(IEnumerable<TEntity> entities)
-    {
-        using var dataContext = CreateDataConnection();
-        dataContext.GetTable<TEntity>()
-            .Merge()
-            .Using(entities)
-            .OnTargetKey()
-            .UpdateWhenMatched()
-            .Merge();
     }
     
     /// <summary>

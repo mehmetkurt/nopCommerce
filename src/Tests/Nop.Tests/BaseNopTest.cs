@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -31,6 +30,7 @@ using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Media;
 using Nop.Core.Events;
+using Nop.Core.Http;
 using Nop.Core.Infrastructure;
 using Nop.Data;
 using Nop.Data.Configuration;
@@ -80,12 +80,15 @@ using Nop.Tests.Nop.Web.Tests.Public.Factories;
 using Nop.Web.Areas.Admin.Factories;
 using Nop.Web.Framework;
 using Nop.Web.Framework.Factories;
+using Nop.Web.Framework.Infrastructure.Extensions;
 using Nop.Web.Framework.Mvc.Routing;
+using Nop.Web.Framework.Security.Captcha;
 using Nop.Web.Framework.Themes;
 using Nop.Web.Framework.UI;
 using Nop.Web.Framework.WebOptimizer;
 using Nop.Web.Infrastructure.Installation;
 using SkiaSharp;
+using static Nop.Tests.Nop.Web.Tests.Admin.Factories.CommonModelFactoryTests;
 using IAuthenticationService = Nop.Services.Authentication.IAuthenticationService;
 using Task = System.Threading.Tasks.Task;
 
@@ -165,6 +168,7 @@ public partial class BaseNopTest
             new TypeConverterAttribute(typeof(GenericListTypeConverter<string>)));
 
         var services = new ServiceCollection();
+        services.AddSingleton<IServiceCollection>(services);
 
         var rootPath =
             new DirectoryInfo(
@@ -186,7 +190,20 @@ public partial class BaseNopTest
         services.AddTransient<INopFileProvider, NopFileProvider>();
         CommonHelper.DefaultFileProvider = new NopFileProvider(webHostEnvironment.Object);
 
-        services.AddHttpClient();
+        //default client
+        services.AddHttpClient(NopHttpDefaults.DefaultHttpClient).WithProxy();
+
+        //client to request current store
+        services.AddHttpClient<StoreHttpClient>();
+
+        //client to request nopCommerce official site
+        services.AddHttpClient<NopHttpClient>().WithProxy();
+
+        //client to request reCAPTCHA service
+        services.AddHttpClient<CaptchaHttpClient>().WithProxy();
+
+        //client to request artificial intelligence service
+        services.AddHttpClient<ArtificialIntelligenceHttpClient>().WithProxy();
 
         var memoryCache = new MemoryCache(new MemoryCacheOptions());
         var typeFinder = new WebAppTypeFinder();
@@ -216,33 +233,30 @@ public partial class BaseNopTest
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers.Append(HeaderNames.Host, NopTestsDefaults.HostIpAddress);
         httpContext.Session = new TestSeesion();
+        
+        var actionContext = new ActionContext(httpContext, httpContext.GetRouteData(), new ActionDescriptor());
 
         var httpContextAccessor = new Mock<IHttpContextAccessor>();
         httpContextAccessor.Setup(p => p.HttpContext).Returns(httpContext);
 
         services.AddSingleton(httpContextAccessor.Object);
-
-        var actionContextAccessor = new Mock<IActionContextAccessor>();
-        actionContextAccessor.Setup(x => x.ActionContext)
-            .Returns(new ActionContext(httpContext, httpContext.GetRouteData(), new ActionDescriptor()));
-
-        services.AddSingleton(actionContextAccessor.Object);
-
+        
         var urlHelperFactory = new Mock<IUrlHelperFactory>();
-        var urlHelper = new NopTestUrlHelper(actionContextAccessor.Object.ActionContext);
+        var urlHelper = new NopTestUrlHelper(actionContext);
 
         urlHelperFactory.Setup(x => x.GetUrlHelper(It.IsAny<ActionContext>()))
             .Returns(urlHelper);
 
-        services.AddTransient(_ => actionContextAccessor.Object);
-
         services.AddSingleton(urlHelperFactory.Object);
 
         var tempDataDictionaryFactory = new Mock<ITempDataDictionaryFactory>();
-        var dataDictionary = new TempDataDictionary(httpContextAccessor.Object.HttpContext,
-            new Mock<ITempDataProvider>().Object);
+        var dataDictionary = new TempDataDictionary(httpContext, new Mock<ITempDataProvider>().Object);
         tempDataDictionaryFactory.Setup(f => f.GetTempData(It.IsAny<HttpContext>())).Returns(dataDictionary);
         services.AddSingleton(tempDataDictionaryFactory.Object);
+
+        var linkGenerator = new Mock<LinkGenerator>();
+
+        services.AddSingleton(linkGenerator.Object);
 
         services.AddSingleton<ITypeFinder>(typeFinder);
         Singleton<ITypeFinder>.Instance = typeFinder;
@@ -481,7 +495,7 @@ public partial class BaseNopTest
         services.AddTransient<ICampaignModelFactory, CampaignModelFactory>();
         services.AddTransient<ICategoryModelFactory, CategoryModelFactory>();
         services.AddTransient<ICheckoutAttributeModelFactory, CheckoutAttributeModelFactory>();
-        services.AddTransient<ICommonModelFactory, CommonModelFactory>();
+        services.AddTransient<ICommonModelFactory, TestCommonModelFactory>();
         services.AddTransient<ICountryModelFactory, CountryModelFactory>();
         services.AddTransient<ICurrencyModelFactory, CurrencyModelFactory>();
         services.AddTransient<ICustomerAttributeModelFactory, CustomerAttributeModelFactory>();

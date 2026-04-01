@@ -531,9 +531,6 @@
   <LocaleResource Name="Account.Login.WrongCredentials">
     <Value>The credentials provided are incorrect</Value>
   </LocaleResource>
-  <LocaleResource Name="Account.Login.WrongCredentials.CustomerNotExist">
-    <Value>No customer account found</Value>
-  </LocaleResource>
   <LocaleResource Name="Account.Login.WrongCredentials.Deleted">
     <Value>Customer is deleted</Value>
   </LocaleResource>
@@ -542,9 +539,6 @@
   </LocaleResource>
   <LocaleResource Name="Account.Login.WrongCredentials.NotActive">
     <Value>Account is not active</Value>
-  </LocaleResource>
-  <LocaleResource Name="Account.Login.WrongCredentials.NotRegistered">
-    <Value>Account is not registered</Value>
   </LocaleResource>
   <LocaleResource Name="Account.Logout">
     <Value>Log out</Value>
@@ -594,12 +588,6 @@
   <LocaleResource Name="Account.PasswordRecovery.Email.Required">
     <Value>Enter your email</Value>
   </LocaleResource>
-  <LocaleResource Name="Account.PasswordRecovery.EmailHasBeenSent">
-    <Value>Email with instructions has been sent to you.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Account.PasswordRecovery.EmailNotFound">
-    <Value>Email not found.</Value>
-  </LocaleResource>
   <LocaleResource Name="Account.PasswordRecovery.LinkExpired">
     <Value>Your password recovery link is expired</Value>
   </LocaleResource>
@@ -617,6 +605,9 @@
   </LocaleResource>
   <LocaleResource Name="Account.PasswordRecovery.RecoverButton">
     <Value>Recover</Value>
+  </LocaleResource>
+  <LocaleResource Name="Account.PasswordRecovery.SendEmailMessage">
+    <Value>If there is an account associated with {0}, you will receive an email with a link to reset your password.</Value>
   </LocaleResource>
   <LocaleResource Name="Account.PasswordRecovery.Tooltip">
     <Value>Please enter your email address below. You will receive a link to reset your password.</Value>
@@ -4821,6 +4812,18 @@
   <LocaleResource Name="Admin.Configuration.AppSettings.Data">
     <Value>Data configuration</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.AppSettings.Data.BulkCopyWithCheckConstraints">
+    <Value>Check constraints during bulk copy operations</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.AppSettings.Data.BulkCopyWithCheckConstraints.Hint">
+    <Value>Check to validate data inserted by bulk copy operations against the check constraints defined in the target table. Uncheck to improve performance, but be aware that it can result in data that does not meet the table's integrity requirements.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.AppSettings.Data.CloseDataContextAfterUse">
+    <Value>Close dataContext after use</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.AppSettings.Data.CloseDataContextAfterUse.Hint">
+    <Value>Check to automatically dispose the data context after each operation, which helps prevent resource leaks. Uncheck if you need to keep the data context open for multiple sequential operations.</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Configuration.AppSettings.Data.ConnectionString">
     <Value>Connection string</Value>
   </LocaleResource>
@@ -7971,6 +7974,12 @@
   <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.PdfLogo.Hint">
     <Value>Image file that will be displayed in PDF order invoices. A small image is recommended.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.PinterestLink">
+    <Value>Pinterest URL</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.PinterestLink.Hint">
+    <Value>Specify your Pinterest page URL. Leave empty if you have no such page.</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.PopupForTermsOfServiceLinks">
     <Value>Popup windows for "terms of service"</Value>
   </LocaleResource>
@@ -8091,6 +8100,12 @@
   <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.SitemapPageSize.Hint">
     <Value>A number of items displayed on one sitemap page.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.SnapchatLink">
+    <Value>Snapchat URL</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.SnapchatLink.Hint">
+    <Value>Specify your Snapchat page URL. Leave empty if you have no such page.</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.StoreClosed">
     <Value>Store closed</Value>
   </LocaleResource>
@@ -8102,6 +8117,12 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.SubjectFieldOnContactUsForm.Hint">
     <Value>Check to allow a customer to type a subject on the contact us page.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.TikTokLink">
+    <Value>TikTok URL</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.TikTokLink.Hint">
+    <Value>Specify your TikTok page URL. Leave empty if you have no such page.</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.TranslateFromLanguage">
     <Value>Translate from the language</Value>
@@ -8118,7 +8139,13 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.TranslationService.Hint">
     <Value>Choose the translation service which will be used for pre-translate functionality.</Value>
-  </LocaleResource>  
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.TumblrLink">
+    <Value>Tumblr URL</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.TumblrLink.Hint">
+    <Value>Specify your Tumblr page URL. Leave empty if you have no such page.</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Configuration.Settings.GeneralCommon.TwitterMetaTags">
     <Value>Twitter META tags</Value>
   </LocaleResource>
@@ -17963,8 +17990,20 @@
   <LocaleResource Name="Footer.FollowUs.Instagram">
     <Value>Instagram</Value>
   </LocaleResource>
+  <LocaleResource Name="Footer.FollowUs.Pinterest">
+    <Value>Pinterest</Value>
+  </LocaleResource>
   <LocaleResource Name="Footer.FollowUs.RSS">
     <Value>RSS</Value>
+  </LocaleResource>
+  <LocaleResource Name="Footer.FollowUs.Snapchat">
+    <Value>Snapchat</Value>
+  </LocaleResource>
+  <LocaleResource Name="Footer.FollowUs.TikTok">
+    <Value>TikTok</Value>
+  </LocaleResource>
+  <LocaleResource Name="Footer.FollowUs.Tumblr">
+    <Value>Tumblr</Value>
   </LocaleResource>
   <LocaleResource Name="Footer.FollowUs.X">
     <Value>X</Value>

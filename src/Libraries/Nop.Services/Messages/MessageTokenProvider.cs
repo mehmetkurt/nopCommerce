@@ -1,9 +1,8 @@
 ﻿using System.Globalization;
 using System.Net;
 using System.Text;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Nop.Core;
 using Nop.Core.Domain;
 using Nop.Core.Domain.Blogs;
@@ -50,7 +49,6 @@ public partial class MessageTokenProvider : IMessageTokenProvider
 
     protected readonly CatalogSettings _catalogSettings;
     protected readonly CurrencySettings _currencySettings;
-    protected readonly IActionContextAccessor _actionContextAccessor;
     protected readonly IAddressService _addressService;
     protected readonly IAttributeFormatter<AddressAttribute, AddressAttributeValue> _addressAttributeFormatter;
     protected readonly IAttributeFormatter<CustomerAttribute, CustomerAttributeValue> _customerAttributeFormatter;
@@ -64,6 +62,7 @@ public partial class MessageTokenProvider : IMessageTokenProvider
     protected readonly IGenericAttributeService _genericAttributeService;
     protected readonly IGiftCardService _giftCardService;
     protected readonly IHtmlFormatter _htmlFormatter;
+    protected readonly IHttpContextAccessor _httpContextAccessor;
     protected readonly ILanguageService _languageService;
     protected readonly ILocalizationService _localizationService;
     protected readonly ILogger _logger;
@@ -77,9 +76,9 @@ public partial class MessageTokenProvider : IMessageTokenProvider
     protected readonly IStateProvinceService _stateProvinceService;
     protected readonly IStoreContext _storeContext;
     protected readonly IStoreService _storeService;
-    protected readonly IUrlHelperFactory _urlHelperFactory;
     protected readonly IUrlRecordService _urlRecordService;
     protected readonly IWorkContext _workContext;
+    protected readonly LinkGenerator _linkGenerator;
     protected readonly MessageTemplatesSettings _templatesSettings;
     protected readonly PaymentSettings _paymentSettings;
     protected readonly StoreInformationSettings _storeInformationSettings;
@@ -93,7 +92,6 @@ public partial class MessageTokenProvider : IMessageTokenProvider
 
     public MessageTokenProvider(CatalogSettings catalogSettings,
         CurrencySettings currencySettings,
-        IActionContextAccessor actionContextAccessor,
         IAddressService addressService,
         IAttributeFormatter<AddressAttribute, AddressAttributeValue> addressAttributeFormatter,
         IAttributeFormatter<CustomerAttribute, CustomerAttributeValue> customerAttributeFormatter,
@@ -107,6 +105,7 @@ public partial class MessageTokenProvider : IMessageTokenProvider
         IGenericAttributeService genericAttributeService,
         IGiftCardService giftCardService,
         IHtmlFormatter htmlFormatter,
+        IHttpContextAccessor httpContextAccessor,
         ILanguageService languageService,
         ILocalizationService localizationService,
         ILogger logger,
@@ -120,9 +119,9 @@ public partial class MessageTokenProvider : IMessageTokenProvider
         IStateProvinceService stateProvinceService,
         IStoreContext storeContext,
         IStoreService storeService,
-        IUrlHelperFactory urlHelperFactory,
         IUrlRecordService urlRecordService,
         IWorkContext workContext,
+        LinkGenerator linkGenerator,
         MessageTemplatesSettings templatesSettings,
         PaymentSettings paymentSettings,
         StoreInformationSettings storeInformationSettings,
@@ -130,7 +129,6 @@ public partial class MessageTokenProvider : IMessageTokenProvider
     {
         _catalogSettings = catalogSettings;
         _currencySettings = currencySettings;
-        _actionContextAccessor = actionContextAccessor;
         _addressService = addressService;
         _addressAttributeFormatter = addressAttributeFormatter;
         _customerAttributeFormatter = customerAttributeFormatter;
@@ -144,6 +142,7 @@ public partial class MessageTokenProvider : IMessageTokenProvider
         _genericAttributeService = genericAttributeService;
         _giftCardService = giftCardService;
         _htmlFormatter = htmlFormatter;
+        _httpContextAccessor = httpContextAccessor;
         _languageService = languageService;
         _localizationService = localizationService;
         _logger = logger;
@@ -157,9 +156,9 @@ public partial class MessageTokenProvider : IMessageTokenProvider
         _stateProvinceService = stateProvinceService;
         _storeContext = storeContext;
         _storeService = storeService;
-        _urlHelperFactory = urlHelperFactory;
         _urlRecordService = urlRecordService;
         _workContext = workContext;
+        _linkGenerator = linkGenerator;
         _templatesSettings = templatesSettings;
         _paymentSettings = paymentSettings;
         _storeInformationSettings = storeInformationSettings;
@@ -198,7 +197,11 @@ public partial class MessageTokenProvider : IMessageTokenProvider
                         "%Twitter.URL%",
                         "%X.URL%",
                         "%YouTube.URL%",
-                        "%Instagram.URL%"
+                        "%Instagram.URL%",
+                        "%TikTok.URL%",
+                        "%Snapchat.URL%",
+                        "%Pinterest.URL%",
+                        "%Tumblr.URL%"
                     }
                 },
 
@@ -938,11 +941,17 @@ public partial class MessageTokenProvider : IMessageTokenProvider
                 throw new Exception("Store URL cannot be empty");
 
             //generate the relative URL
-            var urlHelper = _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext);
-            var url = urlHelper.RouteUrl(routeName, routeValues);
+            var path = _linkGenerator.GetPathByName(
+                httpContext: _httpContextAccessor.HttpContext,
+                endpointName: routeName,
+                values: routeValues
+            );
+
+            if (string.IsNullOrEmpty(path))
+                return store.Url;
 
             //compose the result
-            return new Uri(new Uri(store.Url), url).AbsoluteUri;
+            return new Uri(new Uri(store.Url), path).AbsoluteUri;
         }
         catch (Exception exception)
         {
@@ -982,6 +991,10 @@ public partial class MessageTokenProvider : IMessageTokenProvider
         tokens.Add(new Token("X.URL", _storeInformationSettings.XLink));
         tokens.Add(new Token("YouTube.URL", _storeInformationSettings.YoutubeLink));
         tokens.Add(new Token("Instagram.URL", _storeInformationSettings.InstagramLink));
+        tokens.Add(new Token("TikTok.URL", _storeInformationSettings.TikTokLink));
+        tokens.Add(new Token("Snapchat.URL", _storeInformationSettings.SnapchatLink));
+        tokens.Add(new Token("Pinterest.URL", _storeInformationSettings.PinterestLink));
+        tokens.Add(new Token("Tumblr.URL", _storeInformationSettings.TumblrLink));
 
         //event notification
         await _eventPublisher.EntityTokensAddedAsync(store, tokens);
@@ -1193,8 +1206,8 @@ public partial class MessageTokenProvider : IMessageTokenProvider
         tokens.Add(new Token("ReturnRequest.Product.Name", await _localizationService.GetLocalizedAsync(product, x => x.Name, languageId)));
         tokens.Add(new Token("ReturnRequest.Reason", returnRequest.ReasonForReturn));
         tokens.Add(new Token("ReturnRequest.RequestedAction", returnRequest.RequestedAction));
-        tokens.Add(new Token("ReturnRequest.CustomerComment", _htmlFormatter.FormatText(returnRequest.CustomerComments, false, true, false, false, false), true));
-        tokens.Add(new Token("ReturnRequest.StaffNotes", _htmlFormatter.FormatText(returnRequest.StaffNotes, false, true, false, false, false), true));
+        tokens.Add(new Token("ReturnRequest.CustomerComment", _htmlFormatter.FormatText(returnRequest.CustomerComments), true));
+        tokens.Add(new Token("ReturnRequest.StaffNotes", _htmlFormatter.FormatText(returnRequest.StaffNotes), true));
         tokens.Add(new Token("ReturnRequest.Status", await _localizationService.GetLocalizedEnumAsync(returnRequest.ReturnRequestStatus, languageId)));
 
         //event notification
@@ -1220,7 +1233,7 @@ public partial class MessageTokenProvider : IMessageTokenProvider
         tokens.Add(new Token("GiftCard.CouponCode", giftCard.GiftCardCouponCode));
 
         var giftCardMessage = !string.IsNullOrWhiteSpace(giftCard.Message) ?
-            _htmlFormatter.FormatText(giftCard.Message, false, true, false, false, false) : string.Empty;
+            _htmlFormatter.FormatText(giftCard.Message) : string.Empty;
 
         tokens.Add(new Token("GiftCard.Message", giftCardMessage, true));
 
