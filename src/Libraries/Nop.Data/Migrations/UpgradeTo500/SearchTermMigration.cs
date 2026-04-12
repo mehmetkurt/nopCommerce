@@ -27,9 +27,7 @@ public class SearchTermMigration : ForwardOnlyMigration
         this.AddOrAlterColumnFor<SearchTerm>(t => t.CreatedOnUtc)
             .AsDateTime2();
 
-        this.AddOrAlterColumnFor<SearchTerm>(t => t.CustomerId)
-            .AsInt32()
-            .ForeignKey<Customer>();
+        this.AddOrAlterForeignKeyColumnFor<SearchTerm, Customer>(t => t.CustomerId);
 
         this.AddOrAlterColumnFor<SearchTerm>(t => t.Deleted)
             .AsBoolean();
