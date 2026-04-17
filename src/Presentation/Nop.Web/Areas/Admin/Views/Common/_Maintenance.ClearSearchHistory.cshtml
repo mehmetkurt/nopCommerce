@@ -9,15 +9,23 @@
                 </p>
             </div>
             <div>
-                <button type="submit" name="clear-search-history" class="btn btn-default">
+                <button type="button" id="clear-search-history" class="btn btn-default">
                     <i class="far fa-trash-can"></i>
                     @T("Admin.System.Maintenance.ClearSearchHistory.Button")
                 </button>
                 <script>
                     $(function() {
-                        $("button[name='clear-search-history']").on("click", function () {
+                        $("#clear-search-history-action-confirmation-submit-button").on("click", function () {
                             $("html, body").animate({ scrollTop: 0 }, 400);
                             showThrobber('@Html.Raw(JavaScriptEncoder.Default.Encode(T("Admin.System.Maintenance.ClearSearchHistory.Progress").Text))');
+
+                            const opener = $("#clear-search-history");
+                            opener.prop({
+                                name: "clear-search-history",
+                                type: "submit"
+                            });
+
+                            opener.click();
                         });
                     });
                 </script>
@@ -36,3 +44,4 @@
         </div>
     }
 </div>
+<nop-action-confirmation asp-button-id="clear-search-history" />

@@ -92,7 +92,7 @@ public partial class PostgreSqlDataProvider : BaseDataProvider, INopDataProvider
     public override async Task BulkInsertEntitiesAsync<TEntity>(IEnumerable<TEntity> entities)
     {
         using var dataContext = CreateDataConnection(LinqToDbDataProvider);
-        await dataContext.BulkCopyAsync(new BulkCopyOptions() { KeepIdentity = true }, entities.RetrieveIdentity(dataContext, useSequenceName: true));
+        await dataContext.BulkCopyAsync(entities.RetrieveIdentity(dataContext, useSequenceName: false));
     }
 
     /// <summary>
@@ -103,7 +103,7 @@ public partial class PostgreSqlDataProvider : BaseDataProvider, INopDataProvider
     public override void BulkInsertEntities<TEntity>(IEnumerable<TEntity> entities)
     {
         using var dataContext = CreateDataConnection(LinqToDbDataProvider);
-        dataContext.BulkCopy(new BulkCopyOptions() { KeepIdentity = true }, entities.RetrieveIdentity(dataContext, useSequenceName: true));
+        dataContext.BulkCopy(entities.RetrieveIdentity(dataContext, useSequenceName: false));
     }
 
     /// <summary>

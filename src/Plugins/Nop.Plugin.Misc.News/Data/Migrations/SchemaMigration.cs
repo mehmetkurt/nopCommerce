@@ -56,11 +56,7 @@ public class SchemaMigration : Migration
             if (Schema.Table(newsCommentTableName).Constraint(constraintName).Exists())
                 Delete.UniqueConstraint(constraintName).FromTable(newsCommentTableName);
 
-            this.AddOrAlterColumnFor<NewsComment>(t => t.CustomerId)
-                .AsInt32()
-                .Nullable()
-                .ForeignKey(customerTableName, customerIdColumnName)
-                .OnDelete(Rule.SetNull);
+            this.AddOrAlterForeignKeyColumnFor<NewsComment, Customer>(t => t.CustomerId, Rule.SetNull).Nullable();
         }
         else
         {

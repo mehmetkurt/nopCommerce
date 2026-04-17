@@ -1,7 +1,7 @@
 ﻿using FluentMigrator;
-using FluentMigrator.SqlServer;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Topics;
+using Nop.Data.Extensions;
 using Nop.Data.Mapping;
 
 namespace Nop.Data.Migrations.UpgradeTo490;

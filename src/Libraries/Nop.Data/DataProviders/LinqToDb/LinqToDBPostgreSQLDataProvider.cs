@@ -11,12 +11,11 @@ namespace Nop.Data.DataProviders.LinqToDB;
 /// </summary>
 public partial class LinqToDBPostgreSQLDataProvider : PostgreSQLDataProvider
 {
-    public LinqToDBPostgreSQLDataProvider() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) { }
+    public LinqToDBPostgreSQLDataProvider() : base(ProviderName.PostgreSQL15, PostgreSQLVersion.v15) { }
 
     public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object value)
     {
-
-        if (value is string && dataType.SystemType == typeof(string)) 
+        if (value is string && dataType.SystemType == typeof(string))
             dataType = dataType.WithDbType("citext");
 
         base.SetParameter(dataConnection, parameter, name, dataType, value);
