@@ -66,13 +66,13 @@ public static class FluentMigratorExtensions
     public static IMigrationRunnerBuilder AddNopDbEngines(this IMigrationRunnerBuilder builder)
     {
         if (!DataSettingsManager.IsDatabaseInstalled())
-            return builder.AddSqlServer().AddMySql5().AddPostgres15_0();
+            return builder.AddSqlServer().AddMySql8().AddPostgres15_0();
 
         var dataSettings = DataSettingsManager.LoadSettings();
 
         return dataSettings.DataProvider switch
         {
-            DataProviderType.MySql => builder.AddMySql5(),
+            DataProviderType.MySql => builder.AddMySql8(),
             DataProviderType.SqlServer => builder.AddSqlServer(),
             DataProviderType.PostgreSQL => builder.AddPostgres15_0(),
             _ => throw new NotImplementedException(),

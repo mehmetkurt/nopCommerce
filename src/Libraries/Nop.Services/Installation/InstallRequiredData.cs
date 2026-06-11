@@ -23,6 +23,8 @@ using Nop.Core.Domain.Menus;
 using Nop.Core.Domain.Messages;
 using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Payments;
+using Nop.Core.Domain.PriceLists;
+using Nop.Core.Domain.Reminders;
 using Nop.Core.Domain.ScheduleTasks;
 using Nop.Core.Domain.Security;
 using Nop.Core.Domain.Seo;
@@ -41,6 +43,7 @@ using Nop.Services.Customers;
 using Nop.Services.Helpers;
 using Nop.Services.Media;
 using Nop.Services.Messages;
+using Nop.Services.Reminders;
 using Nop.Services.Seo;
 
 namespace Nop.Services.Installation;
@@ -825,6 +828,13 @@ public partial class InstallationService
                     EmailAccountId = eaGeneral.Id
                 },
                 new() {
+                    Name = MessageTemplateSystemNames.RETURN_REQUEST_WITHDRAWAL_LINK_MESSAGE,
+                    Subject = "%Store.Name%. Confirm your withdrawal request.",
+                    Body = $"<p>We have received your withdrawal request.{Environment.NewLine}Click the <a href=\"%ReturnRequest.WithdrawalUrl%\">link</a> to confirm the request.{Environment.NewLine}</p>{Environment.NewLine}",
+                    IsActive = true,
+                    EmailAccountId = eaGeneral.Id
+                },
+                new() {
                     Name = MessageTemplateSystemNames.NEWSLETTER_SUBSCRIPTION_ACTIVATION_MESSAGE,
                     Subject = "%Store.Name%. Subscription activation message.",
                     Body = $"<p>{Environment.NewLine}<a href=\"%NewsLetterSubscription.ActivationUrl%\">Click here to confirm your subscription to our list.</a>{Environment.NewLine}</p>{Environment.NewLine}<p>{Environment.NewLine}If you received this email by mistake, simply delete it.{Environment.NewLine}</p>{Environment.NewLine}",
@@ -1094,7 +1104,7 @@ public partial class InstallationService
                 new() {
                     Name = MessageTemplateSystemNames.CONTACT_US_MESSAGE,
                     Subject = "%Store.Name%. Contact us",
-                    Body = $"<p>{Environment.NewLine}%ContactUs.Body%{Environment.NewLine}</p>{Environment.NewLine}",
+                    Body = $"<p>{Environment.NewLine}%ContactUs.Body%{Environment.NewLine}</p>{Environment.NewLine}%ContactUs.CustomFields%{Environment.NewLine}",
                     IsActive = true,
                     EmailAccountId = eaGeneral.Id
                 },
@@ -1112,6 +1122,66 @@ public partial class InstallationService
                     IsActive = true,
                     EmailAccountId = eaGeneral.Id
                 },
+                new()
+                {
+                    Name = MessageTemplateSystemNames.REMINDER_ABANDONED_CART_FOLLOW_UP_1_MESSAGE,
+                    Subject = "Dear %Customer.FirstName%, you left some items in your cart.",
+                    Body = $"<p>Hi %Customer.FirstName%,</p>{Environment.NewLine}<p>We noticed you left an item in your cart and this is a friendly reminder to complete your purchase.</p>{Environment.NewLine}<p>Your shopping cart currently contains the following items:</p>{Environment.NewLine}%ShoppingCart.Cart%{Environment.NewLine}<p>Please visit your <a href=\"%ShoppingCart.Url%\">shopping cart</a> to complete your order</p>",
+                    IsActive = true,
+                    EmailAccountId = eaGeneral.Id,
+                    DelayBeforeSend = 2,
+                    DelayPeriod = MessageDelayPeriod.Hours,
+                },
+                new()
+                {
+                    Name = MessageTemplateSystemNames.REMINDER_ABANDONED_CART_FOLLOW_UP_2_MESSAGE,
+                    Subject = "Dear %Customer.FirstName%, was there a problem? What can we help you with?",
+                    Body = $"<p>Hi %Customer.FirstName%,</p>{Environment.NewLine}<p>We noticed you left something at checkout:</p>{Environment.NewLine}%ShoppingCart.Cart%{Environment.NewLine}<p>Please visit your <a href=\"%ShoppingCart.Url%\">shopping cart</a> to complete your order</p>{Environment.NewLine}<p>Was there a problem or any questions? Please reply to this email and we will help you.</p>",
+                    IsActive = true,
+                    EmailAccountId = eaGeneral.Id,
+                    DelayBeforeSend = 1,
+                    DelayPeriod = MessageDelayPeriod.Days,
+                },
+                new()
+                {
+                    Name = MessageTemplateSystemNames.REMINDER_ABANDONED_CART_FOLLOW_UP_3_MESSAGE,
+                    Subject = "Dear %Customer.FirstName%, you left some items in your cart.",
+                    Body = $"<p>Hi %Customer.FirstName%,</p>{Environment.NewLine}<p>We noticed you left an item in your cart and this is a friendly reminder to complete your purchase.</p>{Environment.NewLine}<p>Your shopping cart currently contains the following items:</p>{Environment.NewLine}%ShoppingCart.Cart%{Environment.NewLine}<p>Please visit your <a href=\"%ShoppingCart.Url%\">shopping cart</a> to complete your order</p>",
+                    IsActive = true,
+                    EmailAccountId = eaGeneral.Id,
+                    DelayBeforeSend = 5,
+                    DelayPeriod = MessageDelayPeriod.Days,
+                },
+                new()
+                {
+                    Name = MessageTemplateSystemNames.REMINDER_PENDING_ORDER_FOLLOW_UP_1_MESSAGE,
+                    Subject = "You haven’t completed the order",
+                    Body = $"<h1>You haven’t completed the order</h1>{Environment.NewLine}<p>Dear %Order.CustomerFullName%,</p>{Environment.NewLine}<p>We noticed that you haven’t completed the payment for your order on <a href=\"%Store.URL%\">%Store.Name%</a></p>{Environment.NewLine}<p>Below is the summary of the order:</p>{Environment.NewLine}<p></p>{Environment.NewLine}<p>Name: %Order.CustomerFullName% (%Order.CustomerEmail%)</p>{Environment.NewLine}<p>Order Number: %Order.OrderNumber%</p>{Environment.NewLine}<p>Date Ordered: %Order.CreatedOn%</p>{Environment.NewLine}<p>Product(s):</p>{Environment.NewLine}%Order.Product(s)%{Environment.NewLine}<p>To complete your order:</p>{Environment.NewLine}<p>Go to our website and place a new order.</p>",
+                    IsActive = true,
+                    EmailAccountId = eaGeneral.Id,
+                    DelayBeforeSend = 3,
+                    DelayPeriod = MessageDelayPeriod.Days
+                },
+                new()
+                {
+                    Name = MessageTemplateSystemNames.REMINDER_PENDING_ORDER_FOLLOW_UP_2_MESSAGE,
+                    Subject = "The payment has not been completed",
+                    Body = $"<h1>You haven’t completed the order</h1>{Environment.NewLine}<p>Dear %Order.CustomerFullName%,</p>{Environment.NewLine}<p>We noticed that you haven’t completed the payment for your order on <a href=\"%Store.URL%\">%Store.Name%</a></p>{Environment.NewLine}<p>Below is the summary of the order:</p>{Environment.NewLine}<p></p>{Environment.NewLine}<p>Name: %Order.CustomerFullName% (%Order.CustomerEmail%)</p>{Environment.NewLine}<p>Order Number: %Order.OrderNumber%</p>{Environment.NewLine}<p>Date Ordered: %Order.CreatedOn%</p>{Environment.NewLine}<p>Product(s):</p>{Environment.NewLine}%Order.Product(s)%{Environment.NewLine}<p>To complete your order:</p>{Environment.NewLine}<p>Go to your order details <a href=\"%Order.OrderURLForCustomer%\">here</a> and click the \"Retry payment\" button.</p>",
+                    IsActive = true,
+                    EmailAccountId = eaGeneral.Id,
+                    DelayBeforeSend = 10,
+                    DelayPeriod = MessageDelayPeriod.Days
+                },
+                new()
+                {
+                    Name = MessageTemplateSystemNames.REMINDER_REGISTRATION_FOLLOW_UP_MESSAGE,
+                    Subject = "Registration at %Store.Name%.",
+                    Body = $"<h1>Confirm your email</h1>{Environment.NewLine}<p>You’re receiving this message because you recently signed up on our website. Please confirm your email address by clicking the link below:</p>{Environment.NewLine}<p><a href=\"%Customer.AccountActivationURL%\">%Customer.AccountActivationURL%</a></p>{Environment.NewLine}<p>This step adds extra security to your business by verifying you own this email.</p>{Environment.NewLine}<p>Thank You!</p>",
+                    IsActive = true,
+                    EmailAccountId = eaGeneral.Id,
+                    DelayBeforeSend = 1,
+                    DelayPeriod = MessageDelayPeriod.Days
+                }
             };
 
         await _dataProvider.BulkInsertEntitiesAsync(messageTemplates);
@@ -1376,6 +1446,7 @@ public partial class InstallationService
 
         await SaveSettingAsync(dictionary, new CatalogSettings
         {
+            PriceListStrategy = PriceListStrategy.MinimalPrice,
             AllowViewUnpublishedProductPage = true,
             DisplayDiscontinuedMessageForUnpublishedProducts = true,
             PublishBackProductWhenCancellingOrders = false,
@@ -1618,6 +1689,15 @@ public partial class InstallationService
             ForceMultifactorAuthentication = false
         });
 
+        await SaveSettingAsync(dictionary, new OtpSettings
+        {
+            LoginByPhoneEnabled = false,
+            OtpTimeLife = 30,
+            OtpCountAttemptsToSendCode = 3,
+            OtpTimeToRepeat = 15,
+            OtpLength = 6
+        });
+
         await SaveSettingAsync(dictionary, new AddressSettings
         {
             CompanyEnabled = true,
@@ -1665,7 +1745,12 @@ public partial class InstallationService
             VideoIframeAllow = "fullscreen",
             VideoIframeWidth = 300,
             VideoIframeHeight = 150,
-            PicturePath = NopMediaDefaults.DefaultImagesPath
+            PicturePath = NopMediaDefaults.DefaultImagesPath,
+            Object3dCameraControlEnabled = true,
+            Object3dZoomEnabled = true,
+            Object3dAutoRotateEnabled = false,
+            Object3dLazyLoadingEnabled = true,
+            Object3dUploadSizeLimit = 20,
         });
 
         await SaveSettingAsync(dictionary, new StoreInformationSettings
@@ -1764,7 +1849,6 @@ public partial class InstallationService
 
         await SaveSettingAsync(dictionary, new OrderSettings
         {
-            ReturnRequestNumberMask = "{ID}",
             IsReOrderAllowed = true,
             MinOrderSubtotalAmount = 0,
             MinOrderSubtotalAmountIncludingTax = false,
@@ -1783,10 +1867,6 @@ public partial class InstallationService
             AttachPdfInvoiceToOrderCompletedEmail = false,
             GeneratePdfInvoiceInCustomerLanguage = true,
             AttachPdfInvoiceToOrderPaidEmail = false,
-            ReturnRequestsEnabled = true,
-            ReturnRequestsAllowFiles = false,
-            ReturnRequestsFileMaximumSize = 2048,
-            NumberOfDaysReturnRequestAvailable = 365,
             MinimumOrderPlacementInterval = 1,
             ActivateGiftCardsAfterCompletingOrder = false,
             DeactivateGiftCardsAfterCancellingOrder = false,
@@ -1800,7 +1880,26 @@ public partial class InstallationService
             DisplayCustomerCurrencyOnOrders = false,
             DisplayOrderSummary = true,
             PlaceOrderWithLock = false,
-            CustomerOrdersPageSize = 10
+            CustomerOrdersPageSize = 10,
+            AutoCancelEnabled = false,
+            AutoCancelDelay = 48 * 60,
+            AutoCancelIgnoredPaymentMethods = [],
+            AutoCancelRestoreShoppingCart = false,
+            AutoCancelIgnoreBeforeUtc = DateTime.UtcNow
+        });
+
+        await SaveSettingAsync(dictionary, new ReturnRequestSettings
+        {
+            ReturnRequestNumberMask = "{ID}",
+            ReturnRequestsEnabled = true,
+            ReturnRequestsAllowFiles = false,
+            ReturnRequestsFileMaximumSize = 2048,
+            NumberOfDaysReturnRequestAvailable = 365,
+            UseEuWithdrawalLocales = false,
+            GuestReturnRequestsAllowed = false,
+            ReturnReasonsEnabled = true,
+            ReturnActionsEnabled = true,
+            WithdrawalLinkDaysValid = 7
         });
 
         await SaveSettingAsync(dictionary, new SecuritySettings
@@ -1950,10 +2049,15 @@ public partial class InstallationService
             ShowOnProductReviewPage = false,
             ShowOnRegistrationPage = false,
             ShowOnCheckoutPageForGuests = false,
-            ShowOnCheckGiftCardBalance = true
+            ShowOnCheckGiftCardBalance = true,
+            ShowOnWithdrawalForm = false,
         });
 
-        await SaveSettingAsync(dictionary, new MessagesSettings { UsePopupNotifications = false });
+        await SaveSettingAsync(dictionary, new MessagesSettings
+        {
+            UsePopupNotifications = false,
+            ActiveSmsProviderSystemName = "Sms.Twilio"
+        });
 
         await SaveSettingAsync(dictionary, new ProxySettings
         {
@@ -2081,6 +2185,14 @@ public partial class InstallationService
             MaximumNumberEntities = 8,
             GridThumbPictureSize = 220,
             MaximumMainMenuLevels = 2
+        });
+
+        await SaveSettingAsync(dictionary, new ReminderSettings
+        {
+            AbandonedCartEnabled = true,
+            PendingOrdersEnabled = true,
+            IncompleteRegistrationEnabled = true,
+            ProcessingStartDateUtc = DateTime.UtcNow,
         });
     }
 
@@ -2491,6 +2603,11 @@ public partial class InstallationService
                     Name = "Add a new measure weight"
                 },
                 new() {
+                    SystemKeyword = "AddNewPriceList",
+                    Enabled = true,
+                    Name = "Add a new price list"
+                },
+                new() {
                     SystemKeyword = "AddNewProduct",
                     Enabled = true,
                     Name = "Add a new product"
@@ -2704,6 +2821,11 @@ public partial class InstallationService
                     SystemKeyword = "DeletePlugin",
                     Enabled = true,
                     Name = "Delete a plugin"
+                },
+                new() {
+                    SystemKeyword = "DeletePriceList",
+                    Enabled = true,
+                    Name = "Delete a price list"
                 },
                 new() {
                     SystemKeyword = "DeleteProduct",
@@ -2931,6 +3053,11 @@ public partial class InstallationService
                     Name = "Edit a plugin"
                 },
                 new() {
+                    SystemKeyword = "EditPriceList",
+                    Enabled = true,
+                    Name = "Edit a price list"
+                },
+                new() {
                     SystemKeyword = "EditProduct",
                     Enabled = true,
                     Name = "Edit a product"
@@ -3061,6 +3188,11 @@ public partial class InstallationService
                     Name = "Manufacturers were imported"
                 },
                 new() {
+                    SystemKeyword = "ImportPriceLists",
+                    Enabled = true,
+                    Name = "Import price lists"
+                },
+                new() {
                     SystemKeyword = "ImportProducts",
                     Enabled = true,
                     Name = "Products were imported"
@@ -3099,6 +3231,11 @@ public partial class InstallationService
                     SystemKeyword = "ExportManufacturers",
                     Enabled = true,
                     Name = "Manufacturers were exported"
+                },
+                new() {
+                    SystemKeyword = "ExportPriceLists",
+                    Enabled = true,
+                    Name = "Price lists were exported"
                 },
                 new() {
                     SystemKeyword = "ExportProducts",
@@ -3220,7 +3357,41 @@ public partial class InstallationService
                     SystemKeyword = "UploadIcons",
                     Enabled = true,
                     Name = "Upload a favicon and app icons"
-                }
+                },
+                new() {
+                    SystemKeyword = "AddNewContactFormAttribute",
+                    Enabled = true,
+                    Name = "Add a new contact form attribute"
+                },
+                new()
+                {
+                    SystemKeyword = "EditContactFormAttribute",
+                    Enabled = true,
+                    Name = "Edit a contact form attribute"
+                },
+                new()
+                {
+                    SystemKeyword = "DeleteContactFormAttribute",
+                    Enabled = true,
+                    Name = "Delete a contact form attribute"
+                },
+                new() {
+                    SystemKeyword = "AddNewContactFormAttributeValue",
+                    Enabled = true,
+                    Name = "Add a new contact form attribute value"
+                },
+                new()
+                {
+                    SystemKeyword = "EditContactFormAttributeValue",
+                    Enabled = true,
+                    Name = "Edit a contact form attribute value"
+                },
+                new()
+                {
+                    SystemKeyword = "DeleteContactFormAttributeValue",
+                    Enabled = true,
+                    Name = "Delete a contact form attribute value"
+                },
             };
 
         await _dataProvider.BulkInsertEntitiesAsync(activityLogTypes);
@@ -3295,72 +3466,116 @@ public partial class InstallationService
     {
         var lastEnabledUtc = DateTime.UtcNow;
         var tasks = new List<ScheduleTask>
+        {
+            new()
             {
-                new() {
-                    Name = "Send emails",
-                    Seconds = 60,
-                    Type = "Nop.Services.Messages.QueuedMessagesSendTask, Nop.Services",
-                    Enabled = true,
-                    LastEnabledUtc = lastEnabledUtc,
-                    StopOnError = false
-                },
-                new() {
-                    Name = "Keep alive",
-                    Seconds = 300,
-                    Type = "Nop.Services.Common.KeepAliveTask, Nop.Services",
-                    Enabled = true,
-                    LastEnabledUtc = lastEnabledUtc,
-                    StopOnError = false
-                },
-                new() {
-                    Name = nameof(ResetLicenseCheckTask),
-                    Seconds = 2073600,
-                    Type = "Nop.Services.Common.ResetLicenseCheckTask, Nop.Services",
-                    Enabled = true,
-                    LastEnabledUtc = lastEnabledUtc,
-                    StopOnError = false
-                },
-                new() {
-                    Name = "Delete guests",
-                    Seconds = 600,
-                    Type = "Nop.Services.Customers.DeleteGuestsTask, Nop.Services",
-                    Enabled = true,
-                    LastEnabledUtc = lastEnabledUtc,
-                    StopOnError = false
-                },
-                new() {
-                    Name = "Clear cache",
-                    Seconds = 600,
-                    Type = "Nop.Services.Caching.ClearCacheTask, Nop.Services",
-                    Enabled = false,
-                    StopOnError = false
-                },
-                new() {
-                    Name = "Clear log",
-                    //60 minutes
-                    Seconds = 3600,
-                    Type = "Nop.Services.Logging.ClearLogTask, Nop.Services",
-                    Enabled = false,
-                    StopOnError = false
-                },
-                new() {
-                    Name = "Update currency exchange rates",
-                    //60 minutes
-                    Seconds = 3600,
-                    Type = "Nop.Services.Directory.UpdateExchangeRateTask, Nop.Services",
-                    Enabled = true,
-                    LastEnabledUtc = lastEnabledUtc,
-                    StopOnError = false
-                },
-                new() {
-                    Name = "Delete inactive customers (GDPR)",
-                    //24 hours
-                    Seconds = 86400,
-                    Type = "Nop.Services.Gdpr.DeleteInactiveCustomersTask, Nop.Services",
-                    Enabled = false,
-                    StopOnError = false
-                }
-            };
+                Name = "Send emails",
+                Seconds = 60,
+                Type = "Nop.Services.Messages.QueuedMessagesSendTask, Nop.Services",
+                Enabled = true,
+                LastEnabledUtc = lastEnabledUtc,
+                StopOnError = false
+            },
+            new()
+            {
+                Name = "Keep alive",
+                Seconds = 300,
+                Type = "Nop.Services.Common.KeepAliveTask, Nop.Services",
+                Enabled = true,
+                LastEnabledUtc = lastEnabledUtc,
+                StopOnError = false
+            },
+            new()
+            {
+                Name = nameof(ResetLicenseCheckTask),
+                Seconds = 2073600,
+                Type = "Nop.Services.Common.ResetLicenseCheckTask, Nop.Services",
+                Enabled = true,
+                LastEnabledUtc = lastEnabledUtc,
+                StopOnError = false
+            },
+            new()
+            {
+                Name = "Delete guests",
+                Seconds = 600,
+                Type = "Nop.Services.Customers.DeleteGuestsTask, Nop.Services",
+                Enabled = true,
+                LastEnabledUtc = lastEnabledUtc,
+                StopOnError = false
+            },
+            new()
+            {
+                Name = "Clear cache",
+                Seconds = 600,
+                Type = "Nop.Services.Caching.ClearCacheTask, Nop.Services",
+                Enabled = false,
+                LastEnabledUtc = lastEnabledUtc,
+                StopOnError = false
+            },
+            new()
+            {
+                Name = "Clear log",
+                Seconds = 3600,
+                Type = "Nop.Services.Logging.ClearLogTask, Nop.Services",
+                Enabled = false,
+                LastEnabledUtc = lastEnabledUtc,
+                StopOnError = false
+            },
+            new()
+            {
+                Name = "Update currency exchange rates",
+                Seconds = 3600,
+                Type = "Nop.Services.Directory.UpdateExchangeRateTask, Nop.Services",
+                Enabled = true,
+                LastEnabledUtc = lastEnabledUtc,
+                StopOnError = false
+            },
+            new()
+            {
+                Name = "Delete inactive customers (GDPR)",
+                Seconds = 86400,
+                Type = "Nop.Services.Gdpr.DeleteInactiveCustomersTask, Nop.Services",
+                Enabled = false,
+                StopOnError = false
+            },
+            new()
+            {
+                Name = "Process abandoned carts",
+                Seconds = 60 * 20,
+                Type = NopReminderDefaults.AbandonedCarts.ProcessTaskTypeFullName,
+                Enabled = true,
+                LastEnabledUtc = lastEnabledUtc,
+                StopOnError = false
+            },
+            new()
+            {
+                Name = "Process incomplete orders",
+                Seconds = 60 * 60,
+                Type = NopReminderDefaults.PendingOrders.ProcessTaskTypeFullName,
+                Enabled = true,
+                LastEnabledUtc = lastEnabledUtc,
+                StopOnError = false
+            },
+            new()
+            {
+                Name = "Process incomplete registrations",
+                Seconds = 60 * 60,
+                Type = NopReminderDefaults.IncompleteRegistrations.ProcessTaskTypeFullName,
+                Enabled = true,
+                LastEnabledUtc = lastEnabledUtc,
+                StopOnError = false
+            },
+            new()
+            {
+                Name = "Auto-cancel unpaid orders",
+                //60 minutes
+                Seconds = 3600,
+                Type = "Nop.Services.Orders.AutoCancelOrdersTask, Nop.Services",
+                Enabled = true,
+                LastEnabledUtc = DateTime.UtcNow,
+                StopOnError = false
+            },
+        };
 
         await _dataProvider.BulkInsertEntitiesAsync(tasks);
     }
@@ -3623,6 +3838,14 @@ public partial class InstallationService
                 RouteName = NopRouteNames.General.CUSTOMER_ORDERS,
                 Title = "Orders",
                 Published = true
+            },
+            new MenuItem
+            {
+                MenuId = footerMyAccount.Id,
+                MenuItemType = MenuItemType.StandardPage,
+                RouteName = NopRouteNames.General.WITHDRAWAL_REQUEST_FORM,
+                Title = "Withdraw contract",
+                Published = false
             },
             new MenuItem
             {

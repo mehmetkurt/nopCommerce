@@ -3,7 +3,7 @@ using FluentMigrator.Runner.Generators.MySql;
 
 namespace Nop.Data.DataProviders.Fluentmigrator;
 
-public partial class NopMySql5TypeMap : MySql5TypeMap
+public partial class NopMySql8TypeMap : MySql8TypeMap
 {
     protected override void SetupMySqlTypeMaps()
     {

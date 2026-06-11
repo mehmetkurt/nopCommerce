@@ -86,6 +86,7 @@ public partial class OrderProcessingService : IOrderProcessingService
     protected readonly LocalizationSettings _localizationSettings;
     protected readonly OrderSettings _orderSettings;
     protected readonly PaymentSettings _paymentSettings;
+    protected readonly ReturnRequestSettings _returnRequestSettings;
     protected readonly RewardPointsSettings _rewardPointsSettings;
     protected readonly ShippingSettings _shippingSettings;
     protected readonly TaxSettings _taxSettings;
@@ -139,6 +140,7 @@ public partial class OrderProcessingService : IOrderProcessingService
         LocalizationSettings localizationSettings,
         OrderSettings orderSettings,
         PaymentSettings paymentSettings,
+        ReturnRequestSettings returnRequestSettings,
         RewardPointsSettings rewardPointsSettings,
         ShippingSettings shippingSettings,
         TaxSettings taxSettings)
@@ -188,6 +190,7 @@ public partial class OrderProcessingService : IOrderProcessingService
         _localizationSettings = localizationSettings;
         _orderSettings = orderSettings;
         _paymentSettings = paymentSettings;
+        _returnRequestSettings = returnRequestSettings;
         _rewardPointsSettings = rewardPointsSettings;
         _shippingSettings = shippingSettings;
         _taxSettings = taxSettings;
@@ -3124,7 +3127,7 @@ public partial class OrderProcessingService : IOrderProcessingService
     /// </returns>
     public virtual async Task<bool> IsReturnRequestAllowedAsync(Order order)
     {
-        if (!_orderSettings.ReturnRequestsEnabled)
+        if (!_returnRequestSettings.ReturnRequestsEnabled)
             return false;
 
         if (order == null || order.Deleted)
@@ -3135,10 +3138,10 @@ public partial class OrderProcessingService : IOrderProcessingService
             return false;
 
         //validate allowed number of days
-        if (_orderSettings.NumberOfDaysReturnRequestAvailable > 0)
+        if (_returnRequestSettings.NumberOfDaysReturnRequestAvailable > 0)
         {
             var daysPassed = (DateTime.UtcNow - order.CreatedOnUtc).TotalDays;
-            if (daysPassed >= _orderSettings.NumberOfDaysReturnRequestAvailable)
+            if (daysPassed >= _returnRequestSettings.NumberOfDaysReturnRequestAvailable)
                 return false;
         }
 

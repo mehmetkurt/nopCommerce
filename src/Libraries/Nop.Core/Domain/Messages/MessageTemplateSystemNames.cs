@@ -213,6 +213,11 @@ public static partial class MessageTemplateSystemNames
     /// </summary>
     public const string RETURN_REQUEST_STATUS_CHANGED_CUSTOMER_NOTIFICATION = "ReturnRequestStatusChanged.CustomerNotification";
 
+    /// <summary>
+    /// Represents system name of withdrawal link message
+    /// </summary>
+    public const string RETURN_REQUEST_WITHDRAWAL_LINK_MESSAGE = "ReturnRequest.WithdrawalLinkMessage";
+
     #endregion
 
     #region Misc
@@ -286,6 +291,40 @@ public static partial class MessageTemplateSystemNames
     /// Represents system name of 'Contact vendor' message
     /// </summary>
     public const string CONTACT_VENDOR_MESSAGE = "Service.ContactVendor";
+
+    #endregion
+
+    #region Reminder
+
+    /// <summary>
+    /// Represents system name of abandoned cart follow up #1
+    /// </summary>
+    public const string REMINDER_ABANDONED_CART_FOLLOW_UP_1_MESSAGE = "Reminders.AbandonedCartFollowUp1";
+
+    /// <summary>
+    /// Represents system name of abandoned cart follow up #2
+    /// </summary>
+    public const string REMINDER_ABANDONED_CART_FOLLOW_UP_2_MESSAGE = "Reminders.AbandonedCartFollowUp2";
+
+    /// <summary>
+    /// Represents system name of abandoned cart follow up #3
+    /// </summary>
+    public const string REMINDER_ABANDONED_CART_FOLLOW_UP_3_MESSAGE = "Reminders.AbandonedCartFollowUp3";
+
+    /// <summary>
+    /// Represents system name of pending order follow up #1
+    /// </summary>
+    public const string REMINDER_PENDING_ORDER_FOLLOW_UP_1_MESSAGE = "Reminders.PendingOrderFollowUp1";
+
+    /// <summary>
+    /// Represents system name of pending order follow up #2
+    /// </summary>
+    public const string REMINDER_PENDING_ORDER_FOLLOW_UP_2_MESSAGE = "Reminders.PendingOrderFollowUp2";
+
+    /// <summary>
+    /// Represents system name of incomplete registration follow up
+    /// </summary>
+    public const string REMINDER_REGISTRATION_FOLLOW_UP_MESSAGE = "Reminders.RegistrationFollowUp";
 
     #endregion
 }

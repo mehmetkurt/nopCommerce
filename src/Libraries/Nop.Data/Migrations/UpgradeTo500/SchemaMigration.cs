@@ -1,11 +1,13 @@
 ﻿using FluentMigrator;
 using Nop.Core.Domain.Catalog;
+using Nop.Core.Domain.Customers;
+using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Orders;
 using Nop.Data.Extensions;
 
 namespace Nop.Data.Migrations.UpgradeTo500;
 
-[NopSchemaMigration("2026-01-13 00:00:01", "SchemaMigration for 5.00.0")]
+[NopSchemaMigration("2026-01-13 00:00:05", "SchemaMigration for 5.00.0")]
 public class SchemaMigration : ForwardOnlyMigration
 {
     /// <summary>
@@ -60,9 +62,45 @@ public class SchemaMigration : ForwardOnlyMigration
                 .AsString()
                 .SetExistingRowsTo(null);
         }
+
         //#7386
         this.AddOrAlterColumnFor<Order>(t => t.DesiredDeliveryDateUtc)
             .AsDateTime()
             .Nullable();
+
+        //#7743
+        this.AddOrAlterColumnFor<Customer>(t => t.LastShoppingCartUpdateDateUtc)
+            .AsDateTime2()
+            .Nullable();
+
+        this.AddOrAlterColumnFor<Customer>(t => t.LastAbandonedCartFollowUpNumber)
+            .AsInt32()
+            .Nullable();
+        this.AddOrAlterColumnFor<Customer>(t => t.LastAbandonedCartFollowUpDateUtc)
+            .AsDateTime2()
+            .Nullable();
+        this.AddOrAlterColumnFor<Customer>(t => t.RegistrationFollowUpDateUtc)
+            .AsDateTime2()
+            .Nullable();
+
+        this.AddOrAlterColumnFor<Order>(t => t.LastPendingOrderFollowUpNumber)
+            .AsInt32()
+            .Nullable();
+        this.AddOrAlterColumnFor<Order>(t => t.LastPendingOrderFollowUpDateUtc)
+            .AsDateTime2()
+            .Nullable();
+
+        //#1832
+        this.CreateTableIfNotExists<ContactFormAttribute>();
+        this.CreateTableIfNotExists<ContactFormAttributeValue>();
+
+        //#2430
+        this.AddOrAlterColumnFor<Customer>(c => c.PhoneSmsVerified)
+            .AsBoolean()
+            .NotNullable()
+            .SetExistingRowsTo(false);
+
+        //#4279
+        this.CreateTableIfNotExists<Product3dObject>();
     }
 }

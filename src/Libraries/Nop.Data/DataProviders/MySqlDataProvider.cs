@@ -353,7 +353,7 @@ public partial class MySqlNopDataProvider : BaseDataProvider, INopDataProvider
     /// <summary>
     /// MySql data provider
     /// </summary>
-    protected override IDataProvider LinqToDbDataProvider => MySqlTools.GetDataProvider();
+    protected override IDataProvider LinqToDbDataProvider => MySqlTools.GetDataProvider(MySqlVersion.MySql80);
 
     /// <summary>
     /// Gets allowed a limit input value of the data for hashing functions, returns 0 if not limited

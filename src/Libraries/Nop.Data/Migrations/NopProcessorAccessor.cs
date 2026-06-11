@@ -34,7 +34,7 @@ public class NopProcessorAccessor : IProcessorAccessor
         Processor = dataSettings is null ? processors.FirstOrDefault() : dataSettings.DataProvider switch
         {
             DataProviderType.SqlServer => FindProcessor(processors, ProcessorIdConstants.SqlServer),
-            DataProviderType.MySql => FindProcessor(processors, ProcessorIdConstants.MySql5),
+            DataProviderType.MySql => FindProcessor(processors, ProcessorIdConstants.MySql8),
             DataProviderType.PostgreSQL => FindProcessor(processors, ProcessorIdConstants.PostgreSQL15_0),
             _ => throw new ProcessorFactoryNotFoundException(
                 $@"A migration processor for Data provider type {dataSettings.DataProvider} couldn't be found.")

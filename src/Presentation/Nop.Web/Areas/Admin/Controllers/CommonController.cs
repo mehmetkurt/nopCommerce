@@ -336,13 +336,16 @@ public partial class CommonController : BaseAdminController
     {
         var action = await Request.GetFormValueAsync("action");
 
-        var fileName = await Request.GetFormValueAsync("backupFileName");
-        fileName = _fileProvider.GetFileName(_fileProvider.GetAbsolutePath(fileName));
-
-        var backupPath = _maintenanceService.GetBackupPath(fileName);
-
         try
         {
+            var fileName = await Request.GetFormValueAsync("backupFileName");
+            fileName = _fileProvider.GetFileName(_fileProvider.GetAbsolutePath(fileName));
+
+            var backupPath = _maintenanceService.GetBackupPath(fileName);
+
+            if (!_fileProvider.FileExists(backupPath) || _maintenanceService.GetAllBackupFiles().All(f => f != backupPath))
+                throw new FileNotFoundException($"Backup file not found: {fileName}");
+
             switch (action)
             {
                 case "delete-backup":

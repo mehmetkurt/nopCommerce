@@ -467,6 +467,16 @@ public partial interface IWorkflowMessageService
     /// </returns>
     Task<IList<int>> SendReturnRequestStatusChangedCustomerNotificationAsync(ReturnRequest returnRequest, OrderItem orderItem, Order order);
 
+    /// <summary>
+    /// Sends 'Withdrawal request confirmation' message to a customer
+    /// </summary>
+    /// <param name="order">Order</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the queued email identifier
+    /// </returns>
+    Task<IList<int>> SendWithdrawalRequestConfirmationNotificationAsync(Order order);
+    
     #endregion
 
     #region Messages
@@ -631,11 +641,12 @@ public partial interface IWorkflowMessageService
     /// <param name="senderName">Sender name</param>
     /// <param name="subject">Email subject. Pass null if you want a message template subject to be used.</param>
     /// <param name="body">Email body</param>
+    /// <param name="customAttributes">Custom attributes</param>
     /// <returns>
     /// A task that represents the asynchronous operation
     /// The task result contains the queued email identifier
     /// </returns>
-    Task<IList<int>> SendContactUsMessageAsync(int languageId, string senderEmail, string senderName, string subject, string body);
+    Task<IList<int>> SendContactUsMessageAsync(int languageId, string senderEmail, string senderName, string subject, string body, IDictionary<string, string> customAttributes);
 
     /// <summary>
     /// Sends "contact vendor" message
@@ -762,6 +773,45 @@ public partial interface IWorkflowMessageService
         string replyToEmailAddress = null, string replyToName = null,
         string fromEmail = null, string fromName = null, string subject = null,
         bool ignoreDelayBeforeSend = false);
+
+    #endregion
+
+    #region Reminders
+
+    /// <summary>
+    /// Sends a registration activation follow up to a customer
+    /// </summary>
+    /// <param name="customer">Customer</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the queued email identifiers
+    /// </returns>
+    Task<IList<int>> SendIncompleteRegistrationNotificationMessageAsync(Customer customer);
+
+    /// <summary>
+    /// Sends an abandoned cart follow up to a customer
+    /// </summary>
+    /// <param name="customer">Customer</param>
+    /// <param name="cart">Shopping cart</param>
+    /// <param name="messageTemplateName">Follow up message name</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the queued email identifiers
+    /// </returns>
+    Task<IList<int>> SendAbandonedCartFollowUpCustomerNotificationAsync(Customer customer,
+        IList<ShoppingCartItem> cart, string messageTemplateName);
+
+    /// <summary>
+    /// Sends a pending order follow up to a customer
+    /// </summary>
+    /// <param name="customer">Customer</param>
+    /// <param name="order">Order</param>
+    /// <param name="messageTemplateName">Follow up message name</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the queued email identifiers
+    /// </returns>
+    Task<IList<int>> SendPendingOrderFollowUpCustomerNotificationAsync(Customer customer, Order order, string messageTemplateName);
 
     #endregion
 }
