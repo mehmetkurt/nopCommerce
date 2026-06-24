@@ -1346,6 +1346,7 @@ public partial class AdminMapperConfiguration : Profile, IOrderedMapperProfile
             .ForMember(model => model.AutoCancelDelay_OverrideForStore, options => options.Ignore())
             .ForMember(model => model.AutoCancelIgnoredPaymentMethods_OverrideForStore, options => options.Ignore())
             .ForMember(model => model.AutoCancelRestoreShoppingCart_OverrideForStore, options => options.Ignore())
+            .ForMember(model => model.NextRecurringPaymentNotificationDays_OverrideForStore, options => options.Ignore())
             .ForMember(model => model.AvailablePaymentMethods, options => options.Ignore())
             .ForMember(model => model.ReturnRequestSettings, options => options.Ignore());
         CreateMap<OrderSettingsModel, OrderSettings>()

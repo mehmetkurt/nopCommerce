@@ -366,6 +366,18 @@ public partial interface IWorkflowMessageService
     /// </returns>
     Task<IList<int>> SendRecurringPaymentFailedCustomerNotificationAsync(RecurringPayment recurringPayment, int languageId);
 
+    /// <summary>
+    /// Sends a "Next recurring payment notification" message to a customer
+    /// </summary>
+    /// <param name="recurringPayment">Recurring payment</param>
+    /// <param name="delayBeforeSend">Delay before send</param>
+    /// <param name="languageId">Message language identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the queued email identifier
+    /// </returns>
+    Task<IList<int>> SendNextRecurringPaymentNotificationCustomerMessageAsync(RecurringPayment recurringPayment, int delayBeforeSend, int languageId);
+
     #endregion
 
     #region Newsletter workflow

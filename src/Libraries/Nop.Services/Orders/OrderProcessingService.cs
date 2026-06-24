@@ -68,6 +68,7 @@ public partial class OrderProcessingService : IOrderProcessingService
     protected readonly IProductAttributeFormatter _productAttributeFormatter;
     protected readonly IProductAttributeParser _productAttributeParser;
     protected readonly IProductService _productService;
+    protected readonly IQueuedEmailService _queuedEmailService;
     protected readonly IReturnRequestService _returnRequestService;
     protected readonly IRewardPointService _rewardPointService;
     protected readonly IShipmentService _shipmentService;
@@ -122,6 +123,7 @@ public partial class OrderProcessingService : IOrderProcessingService
         IProductAttributeFormatter productAttributeFormatter,
         IProductAttributeParser productAttributeParser,
         IProductService productService,
+        IQueuedEmailService queuedEmailService,
         IReturnRequestService returnRequestService,
         IRewardPointService rewardPointService,
         IShipmentService shipmentService,
@@ -172,6 +174,7 @@ public partial class OrderProcessingService : IOrderProcessingService
         _productAttributeFormatter = productAttributeFormatter;
         _productAttributeParser = productAttributeParser;
         _productService = productService;
+        _queuedEmailService = queuedEmailService;
         _returnRequestService = returnRequestService;
         _rewardPointService = rewardPointService;
         _shipmentService = shipmentService;
@@ -1237,7 +1240,7 @@ public partial class OrderProcessingService : IOrderProcessingService
     /// <returns>A task that represents the asynchronous operation</returns>
     protected virtual async Task CreateFirstRecurringPaymentAsync(ProcessPaymentRequest processPaymentRequest, Order order)
     {
-        var rp = new RecurringPayment
+        var recurringPayment = new RecurringPayment
         {
             CycleLength = processPaymentRequest.RecurringCycleLength,
             CyclePeriod = processPaymentRequest.RecurringCyclePeriod,
@@ -1247,7 +1250,7 @@ public partial class OrderProcessingService : IOrderProcessingService
             CreatedOnUtc = DateTime.UtcNow,
             InitialOrderId = order.Id
         };
-        await _orderService.InsertRecurringPaymentAsync(rp);
+        await _orderService.InsertRecurringPaymentAsync(recurringPayment);
 
         switch (await _paymentService.GetRecurringPaymentTypeAsync(processPaymentRequest.PaymentMethodSystemName))
         {
@@ -1257,7 +1260,7 @@ public partial class OrderProcessingService : IOrderProcessingService
             case RecurringPaymentType.Manual:
                 await _orderService.InsertRecurringPaymentHistoryAsync(new RecurringPaymentHistory
                 {
-                    RecurringPaymentId = rp.Id,
+                    RecurringPaymentId = recurringPayment.Id,
                     CreatedOnUtc = DateTime.UtcNow,
                     OrderId = order.Id
                 });
@@ -1268,6 +1271,15 @@ public partial class OrderProcessingService : IOrderProcessingService
             default:
                 break;
         }
+
+        var delay = await GetNextRecurringPaymentDelayAsync(recurringPayment);
+
+        if (delay <= 0)
+            return;
+
+        //send notifications about next payment
+        var emails = await _workflowMessageService.SendNextRecurringPaymentNotificationCustomerMessageAsync(recurringPayment, delay, order.CustomerLanguageId);
+        await _genericAttributeService.SaveAttributeAsync(recurringPayment, NopPaymentDefaults.NextRecurringPaymentNotificationEmailsAttribute, emails);
     }
 
     /// <summary>
@@ -1543,6 +1555,26 @@ public partial class OrderProcessingService : IOrderProcessingService
 
         if (!isOrderSaved)
             await _orderService.UpdateOrderAsync(order);
+    }
+
+    /// <summary>
+    /// Get next recurring payment delay (in hours)
+    /// </summary>
+    /// <param name="recurringPayment">Recurring payment</param>
+    /// <returns>Delay in hours</returns>
+    protected virtual async Task<int> GetNextRecurringPaymentDelayAsync(RecurringPayment recurringPayment)
+    {
+        if (_orderSettings.NextRecurringPaymentNotificationDays == 0)
+            return 0;
+
+        var nextPaymentDate = await GetNextPaymentDateAsync(recurringPayment);
+
+        if (!nextPaymentDate.HasValue)
+            return 0;
+
+        var delay = (int)Math.Round(((nextPaymentDate.Value - DateTime.UtcNow).TotalDays - _orderSettings.NextRecurringPaymentNotificationDays) * 24);
+
+        return delay;
     }
 
     #endregion
@@ -1903,13 +1935,14 @@ public partial class OrderProcessingService : IOrderProcessingService
             if (!skipPaymentWorkflow)
             {
                 var paymentMethod = await _paymentPluginManager
-                                        .LoadPluginBySystemNameAsync(processPaymentRequest.PaymentMethodSystemName, customer, initialOrder.StoreId)
-                                    ?? throw new NopException("Payment method couldn't be loaded");
+                        .LoadPluginBySystemNameAsync(processPaymentRequest.PaymentMethodSystemName, customer,
+                            initialOrder.StoreId)
+                    ?? throw new NopException("Payment method couldn't be loaded");
 
                 if (!_paymentPluginManager.IsPluginActive(paymentMethod))
                     throw new NopException("Payment method is not active");
 
-                //Old credit card info
+                //old credit card info
                 if (details.InitialOrder.AllowStoringCreditCardNumber)
                 {
                     processPaymentRequest.CreditCardType = _encryptionService.DecryptText(details.InitialOrder.CardType);
@@ -1938,7 +1971,9 @@ public partial class OrderProcessingService : IOrderProcessingService
                 };
             }
             else
+            {
                 processPaymentResult = paymentResult ?? new ProcessPaymentResult { NewPaymentStatus = PaymentStatus.Paid };
+            }
 
             if (processPaymentResult == null)
                 throw new NopException("processPaymentResult is not available");
@@ -2013,6 +2048,15 @@ public partial class OrderProcessingService : IOrderProcessingService
                 });
 
                 await _orderService.UpdateRecurringPaymentAsync(recurringPayment);
+
+                var delay = await GetNextRecurringPaymentDelayAsync(recurringPayment);
+
+                if (delay <= 0)
+                    return new List<string>();
+
+                //send notifications about next payment
+                var emails = await _workflowMessageService.SendNextRecurringPaymentNotificationCustomerMessageAsync(recurringPayment, delay, order.CustomerLanguageId);
+                await _genericAttributeService.SaveAttributeAsync(recurringPayment, NopPaymentDefaults.NextRecurringPaymentNotificationEmailsAttribute, emails);
 
                 return new List<string>();
             }
@@ -2090,6 +2134,15 @@ public partial class OrderProcessingService : IOrderProcessingService
                 await _workflowMessageService
                     .SendRecurringPaymentCancelledStoreOwnerNotificationAsync(recurringPayment,
                         _localizationSettings.DefaultAdminLanguageId);
+
+                //remove next recurring payment notification emails
+                var emailIds = await _genericAttributeService.GetAttributeAsync<List<int>>(recurringPayment, NopPaymentDefaults.NextRecurringPaymentNotificationEmailsAttribute);
+                if (emailIds != null && emailIds.Any())
+                {
+                    var emails = await _queuedEmailService.GetQueuedEmailsByIdsAsync(emailIds.ToArray());
+                    await _queuedEmailService.DeleteQueuedEmailsAsync(emails);
+                    await _genericAttributeService.SaveAttributeAsync<List<int>>(recurringPayment, NopPaymentDefaults.NextRecurringPaymentNotificationEmailsAttribute, null);
+                }
             }
         }
         catch (Exception exc)

@@ -964,10 +964,15 @@ public partial class ProductController : BaseAdminController
     {
         var data = await ParseBulkEditDataAsync();
 
-        var productsToUpdate = data.Where(d => d.NeedToUpdate(selected)).ToList();
+        var productsToUpdate = data.Where(d => d.NeedToUpdate(selected));
+        var currentVendor = await _workContext.GetCurrentVendorAsync();
+        
+        if (currentVendor != null)
+            productsToUpdate = productsToUpdate.Where(p => p.Product.VendorId == currentVendor.Id);
+
         await _productService.UpdateProductsAsync(productsToUpdate.Select(d => d.UpdateProduct(selected)).ToList());
 
-        var productsToInsert = data.Where(d => d.NeedToCreate(selected)).ToList();
+        var productsToInsert = data.Where(d => d.NeedToCreate(selected));
         await _productService.InsertProductsAsync(productsToInsert.Select(d => d.CreateProduct(selected)).ToList());
 
         //prepare model
@@ -3863,7 +3868,13 @@ public partial class ProductController : BaseAdminController
     {
         //try to get a product with the specified id
         var product = await _productService.GetProductByIdAsync(model.ProductId);
+        
         if (product == null)
+            return RedirectToAction("List", "Product");
+
+        //a vendor should have access only to his products
+        var currentVendor = await _workContext.GetCurrentVendorAsync();
+        if (currentVendor != null && product.VendorId != currentVendor.Id)
             return RedirectToAction("List", "Product");
 
         var allowedAttributeIds = form.Keys.Where(key => key.Contains("attribute_value_"))

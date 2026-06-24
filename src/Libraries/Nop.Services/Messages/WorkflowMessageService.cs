@@ -1473,6 +1473,57 @@ public partial class WorkflowMessageService : IWorkflowMessageService
         }).ToListAsync();
     }
 
+    /// <summary>
+    /// Sends a "Next recurring payment notification" message to a customer
+    /// </summary>
+    /// <param name="recurringPayment">Recurring payment</param>
+    /// <param name="delayBeforeSend">Delay before send</param>
+    /// <param name="languageId">Message language identifier</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the queued email identifier
+    /// </returns>
+    public virtual async Task<IList<int>> SendNextRecurringPaymentNotificationCustomerMessageAsync(RecurringPayment recurringPayment, int delayBeforeSend, int languageId)
+    {
+        ArgumentNullException.ThrowIfNull(recurringPayment);
+        
+        var order = await _orderService.GetOrderByIdAsync(recurringPayment.InitialOrderId) ?? throw new Exception("Order cannot be loaded");
+
+        var store = await _storeService.GetStoreByIdAsync(order.StoreId) ?? await _storeContext.GetCurrentStoreAsync();
+        languageId = await EnsureLanguageIsActiveAsync(languageId, store.Id);
+
+        var messageTemplates = await GetActiveMessageTemplatesAsync(MessageTemplateSystemNames.NEXT_RECURRING_PAYMENT_CUSTOMER_NOTIFICATION, store.Id);
+        if (!messageTemplates.Any())
+            return new List<int>();
+
+        //tokens
+        var commonTokens = new List<Token>();
+        await _messageTokenProvider.AddOrderTokensAsync(commonTokens, order, languageId);
+        await _messageTokenProvider.AddCustomerTokensAsync(commonTokens, order.CustomerId);
+        await _messageTokenProvider.AddRecurringPaymentTokensAsync(commonTokens, recurringPayment);
+
+        return await messageTemplates.SelectAwait(async messageTemplate =>
+        {
+            //email account
+            var emailAccount = await GetEmailAccountOfMessageTemplateAsync(messageTemplate, languageId);
+
+            var tokens = new List<Token>(commonTokens);
+            await _messageTokenProvider.AddStoreTokensAsync(tokens, store, emailAccount, languageId);
+
+            //event notification
+            await _eventPublisher.MessageTokensAddedAsync(messageTemplate, tokens);
+
+            var billingAddress = await _addressService.GetAddressByIdAsync(order.BillingAddressId);
+
+            var toEmail = billingAddress.Email;
+            var toName = $"{billingAddress.FirstName} {billingAddress.LastName}";
+            messageTemplate.DelayPeriod = MessageDelayPeriod.Hours;
+            messageTemplate.DelayBeforeSend = delayBeforeSend;
+
+            return await SendNotificationAsync(messageTemplate, emailAccount, languageId, tokens, toEmail, toName);
+        }).ToListAsync();
+    }
+
     #endregion
 
     #region Newsletter workflow

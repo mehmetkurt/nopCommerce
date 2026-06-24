@@ -166,6 +166,11 @@ public static partial class MessageTemplateSystemNames
     /// </summary>
     public const string RECURRING_PAYMENT_FAILED_CUSTOMER_NOTIFICATION = "RecurringPaymentFailed.CustomerNotification";
 
+    /// <summary>
+    /// Represents system name of notification customer about the next recurring payments
+    /// </summary>
+    public const string NEXT_RECURRING_PAYMENT_CUSTOMER_NOTIFICATION = "NextRecurringPaymentNotification.CustomerNotification";
+
     #endregion
 
     #region Newsletter

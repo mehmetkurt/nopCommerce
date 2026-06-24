@@ -783,6 +783,10 @@ public class LocalizationMigration : MigrationBase
             ["ReturnRequests.WithdrawalForm.ConfirnationText"] = "If your details are correct, we've sent you a link to continue.",
             ["ReturnRequests.WithdrawalForm.EmailAddress.Required"] = "The Email address is required",
             ["ReturnRequests.WithdrawalForm.OrderNumber.Required"] = "The Order number is required",
+
+            //#309
+            ["Admin.Configuration.Settings.Order.NextRecurringPaymentNotificationDays"] = "Next Recurring Payment Notification Days",
+            ["Admin.Configuration.Settings.Order.NextRecurringPaymentNotificationDays.Hint"] = "Number of days before the next recurring payment when customers should receive a notification email. Set to 0 to disable this notification.",
         });
 
         #endregion

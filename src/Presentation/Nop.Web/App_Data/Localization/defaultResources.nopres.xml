@@ -8972,6 +8972,12 @@
   <LocaleResource Name="Admin.Configuration.Settings.Order.MinOrderTotalAmount.Hint">
     <Value>Enter minimum order total amount.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.Order.NextRecurringPaymentNotificationDays">
+  	<Value>Next Recurring Payment Notification Days</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.Order.NextRecurringPaymentNotificationDays.Hint">
+  	<Value>Number of days before the next recurring payment when customers should receive a notification email. Set to 0 to disable this notification.</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Configuration.Settings.Order.NumberOfDaysReturnRequestAvailable">
     <Value>Number of days that the return request is available</Value>
   </LocaleResource>

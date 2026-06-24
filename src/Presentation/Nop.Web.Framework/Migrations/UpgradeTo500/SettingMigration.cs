@@ -132,6 +132,9 @@ public class SettingMigration : MigrationBase
         this.SetSettingIfNotExists<ReturnRequestSettings, bool>(settings => settings.ReturnActionsEnabled, true);
         this.SetSettingIfNotExists<ReturnRequestSettings, int>(settings => settings.WithdrawalLinkDaysValid, 7);
         this.SetSettingIfNotExists<CaptchaSettings, bool>(settings => settings.ShowOnWithdrawalForm, false);
+
+        //#309
+        this.SetSettingIfNotExists<OrderSettings, int>(settings => settings.NextRecurringPaymentNotificationDays, 1);
     }
 
     public override void Down()

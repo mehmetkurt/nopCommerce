@@ -202,4 +202,9 @@ public partial class OrderSettings : ISettings
     /// Gets or sets the UTC date and time before which orders are ignored by the automatic cancellation
     /// </summary>
     public DateTime? AutoCancelIgnoreBeforeUtc { get; set; }
+
+    /// <summary>
+    /// Gets or sets the number of days before the next recurring payment when the notification should be sent to customers
+    /// </summary>
+    public int NextRecurringPaymentNotificationDays { get; set; }
 }
