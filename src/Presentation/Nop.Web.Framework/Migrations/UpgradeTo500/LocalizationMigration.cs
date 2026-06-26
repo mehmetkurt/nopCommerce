@@ -411,7 +411,15 @@ public class LocalizationMigration : MigrationBase
             "Account.Login.WrongCredentials.CustomerNotExist",
             "Account.Login.WrongCredentials.NotRegistered",
             "Account.PasswordRecovery.EmailHasBeenSent",
-            "Account.PasswordRecovery.EmailNotFound"
+            "Account.PasswordRecovery.EmailNotFound",
+
+            //#8093
+            "Admin.Configuration.Settings.CustomerSettings.PhoneNumberRegexValidationRule.Error",
+            "Admin.Configuration.Settings.CustomerUser.PhoneNumberValidationRule",
+            "Admin.Configuration.Settings.CustomerUser.PhoneNumberValidationRule.Hint",
+            "Admin.Configuration.Settings.CustomerUser.PhoneNumberValidationUseRegex",
+            "Admin.Configuration.Settings.CustomerUser.PhoneNumberValidationUseRegex.Hint",
+
         });
 
         #endregion
@@ -656,7 +664,7 @@ public class LocalizationMigration : MigrationBase
             //customer info
             ["Account.CustomerInfo.VerifyPhoneNumber"] = "Verify phone number",
             ["Account.Fields.Phone.Status.NotVerified"] = "Phone number is not verified",
-            
+
             //#4279
             ["Admin.Catalog.Products.Multimedia.Object3d"] = "3D model",
             ["Admin.Catalog.Products.Multimedia.Object3d.Fields.FileName"] = "3D model file",
@@ -787,6 +795,10 @@ public class LocalizationMigration : MigrationBase
             //#309
             ["Admin.Configuration.Settings.Order.NextRecurringPaymentNotificationDays"] = "Next Recurring Payment Notification Days",
             ["Admin.Configuration.Settings.Order.NextRecurringPaymentNotificationDays.Hint"] = "Number of days before the next recurring payment when customers should receive a notification email. Set to 0 to disable this notification.",
+
+            //#8093
+            ["Admin.Address.Fields.PhoneNumber.NotValid"] = "Phone number is not valid.",
+            ["Admin.Customers.Customers.Fields.Phone.NotValid"] = "Phone number is not valid.",
         });
 
         #endregion
