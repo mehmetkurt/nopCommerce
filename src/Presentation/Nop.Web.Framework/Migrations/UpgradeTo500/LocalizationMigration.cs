@@ -420,6 +420,32 @@ public class LocalizationMigration : MigrationBase
             "Admin.Configuration.Settings.CustomerUser.PhoneNumberValidationUseRegex",
             "Admin.Configuration.Settings.CustomerUser.PhoneNumberValidationUseRegex.Hint",
 
+            //#8169
+            "Admin.Orders.Fields.CardCVV2",
+            "Admin.Orders.Fields.CardCVV2.Hint",
+            "Admin.Orders.Fields.CardExpirationMonth",
+            "Admin.Orders.Fields.CardExpirationMonth.Hint",
+            "Admin.Orders.Fields.CardExpirationYear",
+            "Admin.Orders.Fields.CardExpirationYear.Hint",
+            "Admin.Orders.Fields.CardName",
+            "Admin.Orders.Fields.CardName.Hint",
+            "Admin.Orders.Fields.CardNumber",
+            "Admin.Orders.Fields.CardNumber.Hint",
+            "Admin.Orders.Fields.CardType",
+            "Admin.Orders.Fields.CardType.Hint",
+            "Payment.CardCode",
+            "Payment.CardCode.Required",
+            "Payment.CardCode.Wrong",
+            "Payment.CardholderName",
+            "Payment.CardholderName.Required",
+            "Payment.CardNumber",
+            "Payment.CardNumber.Required",
+            "Payment.CardNumber.Wrong",
+            "Payment.ExpirationDate",
+            "Payment.ExpirationDate.Expired",
+            "Payment.ExpireMonth.Required",
+            "Payment.ExpireYear.Required",
+            "Payment.SelectCreditCard",
         });
 
         #endregion

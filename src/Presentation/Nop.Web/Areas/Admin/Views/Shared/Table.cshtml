@@ -1,5 +1,4 @@
 ﻿@model DataTablesModel
-
 @functions
 {
     string GetUrl(DataUrl dataUrl)
@@ -277,7 +276,7 @@
                         }).formatToParts(value)
                             .map(({ type, value: vpart }) => //for some locales dotnet accepts latin digits, but still requires localized signs and separators
                             {
-                                var parser = Globalize("@CultureInfo.CurrentUICulture.Name.ToLowerInvariant()").numberParser();
+                                var parser = Globalize("@NopHtml.GetDefaultJavaScriptCulture()").numberParser();
 
                                 if (type == "integer")
                                     return parser(vpart);
