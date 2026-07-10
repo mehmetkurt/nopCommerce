@@ -788,9 +788,9 @@ public partial class NopHtmlHelper : INopHtmlHelper
     {
         var cultureToUse = NopCommonDefaults.DefaultLocalePattern;
 
-        if (_fileProvider.DirectoryExists(_fileProvider.Combine(_fileProvider.WebRootPath, string.Format(NopCommonDefaults.LocalePatternPath, CultureInfo.CurrentCulture.Name))))
+        if (_fileProvider.DirectoryExists(_fileProvider.GetAbsolutePath(string.Format(NopCommonDefaults.LocalePatternPath, CultureInfo.CurrentCulture.Name))))
             cultureToUse = CultureInfo.CurrentCulture.Name;
-        else if (_fileProvider.DirectoryExists(_fileProvider.Combine(_fileProvider.WebRootPath, string.Format(NopCommonDefaults.LocalePatternPath, CultureInfo.CurrentCulture.TwoLetterISOLanguageName))))
+        else if (_fileProvider.DirectoryExists(_fileProvider.GetAbsolutePath(string.Format(NopCommonDefaults.LocalePatternPath, CultureInfo.CurrentCulture.TwoLetterISOLanguageName))))
             cultureToUse = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 
         return cultureToUse;
