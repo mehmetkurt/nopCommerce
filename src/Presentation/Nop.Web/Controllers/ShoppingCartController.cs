@@ -824,9 +824,16 @@ public partial class ShoppingCartController : BasePublicController
         if (_shoppingCartSettings.AllowCartItemEditing && updatecartitemid > 0)
         {
             var store = await _storeContext.GetCurrentStoreAsync();
+
+            var scTypes = new HashSet<int>()
+            {
+                shoppingCartTypeId,
+                (int)ShoppingCartType.Postponed
+            };
+
             //search with the same cart type as specified
-            var cart = await _shoppingCartService.GetShoppingCartAsync(await _workContext.GetCurrentCustomerAsync(), 
-                (ShoppingCartType)shoppingCartTypeId, store.Id, customWishlistId: customwishlistid);
+            var cart = await _shoppingCartService.GetShoppingCartAsync(await _workContext.GetCurrentCustomerAsync(),
+                scTypes.ToArray(), store.Id, customWishlistId: customwishlistid);
 
             updatecartitem = cart.FirstOrDefault(x => x.Id == updatecartitemid);
             //not found? let's ignore it. in this case we'll add a new item
@@ -1248,7 +1255,9 @@ public partial class ShoppingCartController : BasePublicController
             return RedirectToRoute(NopRouteNames.General.HOMEPAGE);
 
         var store = await _storeContext.GetCurrentStoreAsync();
+
         var cart = await _shoppingCartService.GetShoppingCartAsync(await _workContext.GetCurrentCustomerAsync(), ShoppingCartType.ShoppingCart, store.Id);
+
         var model = new ShoppingCartModel();
         model = await _shoppingCartModelFactory.PrepareShoppingCartModelAsync(model, cart);
         return View(model);
@@ -1265,6 +1274,22 @@ public partial class ShoppingCartController : BasePublicController
             return Challenge();
 
         return RedirectToRoute(NopRouteNames.General.CART);
+    }
+
+
+    [HttpPost, ActionName("Cart")]
+    [FormValueRequired("changevendorcart")]
+    public virtual async Task<IActionResult> ChangeVendorCart(ShoppingCartModel model, IFormCollection form)
+    {
+        if (!await _permissionService.AuthorizeAsync(StandardPermission.PublicStore.ENABLE_SHOPPING_CART))
+            return RedirectToRoute(NopRouteNames.General.HOMEPAGE);
+
+        var customer = await _workContext.GetCurrentCustomerAsync();
+        var store = await _storeContext.GetCurrentStoreAsync();
+
+        await _shoppingCartService.SetShoppingCartVendorAsync(customer, model.SelectedVendorId, store.Id);
+
+        return await Cart();
     }
 
     [HttpPost, ActionName("Cart")]

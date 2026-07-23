@@ -25,7 +25,32 @@
         }
         @*we add enctype = "multipart/form-data" because "File upload" attribute control type requires it*@
         <form asp-route="@NopRouteNames.General.CART" method="post" enctype="multipart/form-data" id="shopping-cart-form">
+            @if (Model.IsEditable && Model.DisplayVendorList)
+            {
+                <div class="sc-vendor">
+                    <label asp-for="SelectedVendorId" class="sc-vendor-label">
+                        @T("ShoppingCart.VendorList")
+                    </label>
+                    <select asp-for="SelectedVendorId" asp-items="Model.AvailableVendors"></select>
+                </div>
+                <script asp-location="Footer">
+                    $(function() {
+                        $('#@Html.IdFor(m => m.SelectedVendorId)').on('change', function() {
+
+                            $('<input>', {
+                                type: 'hidden',
+                                name: 'changevendorcart',
+                                value: '1'
+                            }).appendTo('#shopping-cart-form');
+
+                            $('#shopping-cart-form').trigger('submit');
+                        });
+                    })
+                </script>
+            }
+
             @await Html.PartialAsync("_ShoppingCartItems", Model)
+
             @if (Model.IsEditable && Model.Items.Count > 0 && Model.DisplayTaxShippingInfo)
             {
                 var inclTax = await workContext.GetTaxDisplayTypeAsync() == TaxDisplayType.IncludingTax;

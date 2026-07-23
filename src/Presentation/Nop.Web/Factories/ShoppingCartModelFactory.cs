@@ -399,6 +399,7 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
             ProductSeName = await _urlRecordService.GetSeNameAsync(product),
             Quantity = sci.Quantity,
             AttributeInfo = await _productAttributeFormatter.FormatAttributesAsync(product, sci.AttributesXml),
+            VendorId = product.VendorId,
         };
 
         //allow editing?
@@ -772,6 +773,28 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
         return model;
     }
 
+    protected virtual async Task<List<SelectListItem>> PrepareAvailableVendorsListAsync(Customer customer, int storeId)
+    {
+        var cart = await _shoppingCartService.GetShoppingCartAsync(customer, [(int)ShoppingCartType.ShoppingCart, (int)ShoppingCartType.Postponed], storeId);
+        
+        var vendors = await cart
+            .SelectAwait(async sci => await _vendorService.GetVendorByProductIdAsync(sci.ProductId))
+            .Where(v => v != null)
+            .DistinctBy(v => v.Id)
+            .OrderBy(v => v.DisplayOrder).ThenBy(v => v.Id)
+            .ToListAsync();
+
+        var result = await vendors.SelectAwait(async vendor => new SelectListItem
+        {
+            Text = await _localizationService.GetLocalizedAsync(vendor, x => x.Name),
+            Value = vendor.Id.ToString()
+        }).ToListAsync();
+
+        result.Insert(0, new(await _localizationService.GetResourceAsync("ShoppingCart.VendorList.All"), "0"));
+
+        return result;
+    }
+
     #endregion
 
     #region Methods
@@ -948,6 +971,13 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
         {
             var cartItemModel = await PrepareShoppingCartItemModelAsync(cart, sci);
             model.Items.Add(cartItemModel);
+        }
+
+        if (_shoppingCartSettings.ShoppingCartVendorEnabled)
+        {
+            model.SelectedVendorId = await _genericAttributeService.GetAttributeAsync<int>(customer, NopCustomerDefaults.ShoppingCartVendorAttribute, store.Id);
+            model.AvailableVendors = await PrepareAvailableVendorsListAsync(customer, store.Id);
+            model.DisplayVendorList = _shoppingCartSettings.ShoppingCartVendorEnabled && model.AvailableVendors.Count > 1;
         }
 
         //payment methods

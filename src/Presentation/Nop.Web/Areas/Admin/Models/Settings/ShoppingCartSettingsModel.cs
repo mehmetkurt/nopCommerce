@@ -96,5 +96,13 @@ public partial record ShoppingCartSettingsModel : BaseNopModel, ISettingsModel
     public bool GroupTierPricesForDistinctShoppingCartItems { get; set; }
     public bool GroupTierPricesForDistinctShoppingCartItems_OverrideForStore { get; set; }
 
+    [NopResourceDisplayName("Admin.Configuration.Settings.ShoppingCart.ShoppingCartVendorEnabled")]
+    public bool ShoppingCartVendorEnabled { get; set; }
+    public bool ShoppingCartVendorEnabled_OverrideForStore { get; set; }
+
+    [NopResourceDisplayName("Admin.Configuration.Settings.ShoppingCart.ShoppingCartVendorRequired")]
+    public bool ShoppingCartVendorRequired { get; set; }
+    public bool ShoppingCartVendorRequired_OverrideForStore { get; set; }
+
     #endregion
 }
