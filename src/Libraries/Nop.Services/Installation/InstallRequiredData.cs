@@ -1905,7 +1905,9 @@ public partial class InstallationService
             GuestReturnRequestsAllowed = false,
             ReturnReasonsEnabled = true,
             ReturnActionsEnabled = true,
-            WithdrawalLinkDaysValid = 7
+            WithdrawalLinkDaysValid = 7,
+            ReturnRequestsForCompletedOrdersOnly = true,
+            DownloadableProductsReturnRequestsAllowed = false,
         });
 
         await SaveSettingAsync(dictionary, new SecuritySettings

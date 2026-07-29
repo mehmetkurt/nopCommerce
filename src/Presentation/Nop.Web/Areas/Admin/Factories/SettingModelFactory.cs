@@ -1565,6 +1565,8 @@ public partial class SettingModelFactory : ISettingModelFactory
         model.ReturnRequestsEnabled = returnRequestSettings.ReturnRequestsEnabled;
         model.UseEuWithdrawalLocales = returnRequestSettings.UseEuWithdrawalLocales;
         model.WithdrawalLinkDaysValid = returnRequestSettings.WithdrawalLinkDaysValid;
+        model.ReturnRequestsForCompletedOrdersOnly = returnRequestSettings.ReturnRequestsForCompletedOrdersOnly;
+        model.DownloadableProductsReturnRequestsAllowed = returnRequestSettings.DownloadableProductsReturnRequestsAllowed;
 
         //fill in additional values (not existing in the entity)
         model.ActiveStoreScopeConfiguration = storeId;
@@ -1581,6 +1583,8 @@ public partial class SettingModelFactory : ISettingModelFactory
             model.GuestReturnRequestsAllowed_OverrideForStore = await _settingService.SettingExistsAsync(returnRequestSettings, x => x.GuestReturnRequestsAllowed, storeId);
             model.ReturnReasonsEnabled_OverrideForStore = await _settingService.SettingExistsAsync(returnRequestSettings, x => x.ReturnReasonsEnabled, storeId);
             model.ReturnActionsEnabled_OverrideForStore = await _settingService.SettingExistsAsync(returnRequestSettings, x => x.ReturnActionsEnabled, storeId);
+            model.ReturnRequestsForCompletedOrdersOnly_OverrideForStore = await _settingService.SettingExistsAsync(returnRequestSettings, x => x.ReturnRequestsForCompletedOrdersOnly, storeId);
+            model.DownloadableProductsReturnRequestsAllowed_OverrideForStore = await _settingService.SettingExistsAsync(returnRequestSettings, x => x.DownloadableProductsReturnRequestsAllowed, storeId);
         }
 
         //prepare nested search models

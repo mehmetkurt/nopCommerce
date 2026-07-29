@@ -997,6 +997,8 @@ public partial class SettingController : BaseAdminController
             await _settingService.SaveSettingOverridablePerStoreAsync(returnRequestSettings, x => x.WithdrawalLinkDaysValid, model.ReturnRequestSettings.WithdrawalLinkDaysValid_OverrideForStore, storeScope, false);
             await _settingService.SaveSettingOverridablePerStoreAsync(returnRequestSettings, x => x.ReturnReasonsEnabled, model.ReturnRequestSettings.ReturnReasonsEnabled_OverrideForStore, storeScope, false);
             await _settingService.SaveSettingOverridablePerStoreAsync(returnRequestSettings, x => x.ReturnActionsEnabled, model.ReturnRequestSettings.ReturnActionsEnabled_OverrideForStore, storeScope, false);
+            await _settingService.SaveSettingOverridablePerStoreAsync(returnRequestSettings, x => x.ReturnRequestsForCompletedOrdersOnly, model.ReturnRequestSettings.ReturnRequestsForCompletedOrdersOnly_OverrideForStore, storeScope, false);
+            await _settingService.SaveSettingOverridablePerStoreAsync(returnRequestSettings, x => x.DownloadableProductsReturnRequestsAllowed, model.ReturnRequestSettings.DownloadableProductsReturnRequestsAllowed_OverrideForStore, storeScope, false);
 
             //now clear settings cache
             await _settingService.ClearCacheAsync();

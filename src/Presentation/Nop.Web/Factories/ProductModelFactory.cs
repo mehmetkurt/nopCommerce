@@ -14,6 +14,7 @@ using Nop.Core.Domain.Shipping;
 using Nop.Core.Domain.Stores;
 using Nop.Core.Domain.Vendors;
 using Nop.Core.Http;
+using Nop.Core.Infrastructure;
 using Nop.Services.Catalog;
 using Nop.Services.Common;
 using Nop.Services.Customers;
@@ -189,6 +190,53 @@ public partial class ProductModelFactory : IProductModelFactory
     #region Utilities
 
     /// <summary>
+    /// Get base price (PAngV)
+    /// </summary>
+    /// <param name="product">Product</param>
+    /// <param name="productPrice">Product price (in primary currency). Pass null if you want to use a default produce price</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the base price
+    /// </returns>
+    protected virtual async Task<decimal?> GetBaseProductPriceAsync(Product product, decimal? productPrice)
+    {
+        ArgumentNullException.ThrowIfNull(product);
+
+        if (!product.BasepriceEnabled)
+            return null;
+
+        var productAmount = product.BasepriceAmount;
+
+        //amount in product cannot be 0
+        if (productAmount == 0)
+            return null;
+
+        var measureService = EngineContext.Current.Resolve<IMeasureService>();
+
+        var referenceAmount = product.BasepriceBaseAmount;
+        var productUnit = await measureService.GetMeasureWeightByIdAsync(product.BasepriceUnitId);
+
+        //measure weight cannot be loaded
+        if (productUnit == null)
+            return null;
+
+        var referenceUnit = await measureService.GetMeasureWeightByIdAsync(product.BasepriceBaseUnitId);
+
+        //measure weight cannot be loaded
+        if (referenceUnit == null)
+            return null;
+
+        productPrice ??= product.Price;
+
+        var basePrice = productPrice.Value /
+                        //do not round. otherwise, it can cause issues
+                        await measureService.ConvertWeightAsync(productAmount, productUnit, referenceUnit, false) *
+                        referenceAmount;
+
+        return basePrice;
+    }
+
+    /// <summary>
     /// Prepare the grouped product overview price model
     /// </summary>
     /// <param name="product">Product</param>
@@ -249,7 +297,7 @@ public partial class ProductModelFactory : IProductModelFactory
 
             //PAngV default baseprice (used in Germany)
             priceModel.BasePricePAngV = await _priceFormatter.FormatBasePriceAsync(product, finalPriceBase);
-            priceModel.BasePricePAngVValue = finalPriceBase;
+            priceModel.BasePricePAngVValue = await GetBaseProductPriceAsync(product, finalPriceBase);
         }
     }
 
@@ -533,7 +581,7 @@ public partial class ProductModelFactory : IProductModelFactory
 
         //PAngV default base price (used in Germany)
         model.BasePricePAngV = await _priceFormatter.FormatBasePriceAsync(product, finalPriceWithDiscountBase);
-        model.BasePricePAngVValue = finalPriceWithDiscountBase;
+        model.BasePricePAngVValue = await GetBaseProductPriceAsync(product, finalPriceWithDiscountBase);
 
         return model;
     }

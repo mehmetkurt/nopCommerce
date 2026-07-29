@@ -36,7 +36,6 @@
     <None Remove="Content\images\edit_.png" />
     <None Remove="Content\images\move.png" />
     <None Remove="Content\images\new.png" />
-    <None Remove="Content\images\remove_.png" />
     <None Remove="Content\images\reply.png" />
     <None Remove="Content\images\topic-type1.png" />
     <None Remove="Content\images\topic-type2.png" />
@@ -137,16 +136,13 @@
     <Content Include="Admin\Views\_ViewStart.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\images\edit_.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Content\images\move.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\images\new.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\images\remove_.png">
+    <Content Include="Content\images\remove.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\images\reply.png">
