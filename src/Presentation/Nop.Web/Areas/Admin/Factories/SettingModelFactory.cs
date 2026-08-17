@@ -1020,6 +1020,7 @@ public partial class SettingModelFactory : ISettingModelFactory
             model.NotifyStoreOwnerAboutVendorInformationChange_OverrideForStore = await _settingService.SettingExistsAsync(vendorSettings, x => x.NotifyStoreOwnerAboutVendorInformationChange, storeId);
             model.MaximumProductNumber_OverrideForStore = await _settingService.SettingExistsAsync(vendorSettings, x => x.MaximumProductNumber, storeId);
             model.AllowVendorsToImportProducts_OverrideForStore = await _settingService.SettingExistsAsync(vendorSettings, x => x.AllowVendorsToImportProducts, storeId);
+            model.AllowVendorsToUpload3dObjects_OverrideForStore = await _settingService.SettingExistsAsync(vendorSettings, x => x.AllowVendorsToUpload3dObjects, storeId);
         }
 
         //prepare nested search model

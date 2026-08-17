@@ -10031,6 +10031,12 @@
   <LocaleResource Name="Admin.Configuration.Settings.Vendor.AllowVendorsToImportProducts.Hint">
     <Value>Check if vendors are allowed to import products.</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.Vendor.AllowVendorsToUpload3dObjects">
+    <Value>Allow vendors to upload 3D models</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.Vendor.AllowVendorsToUpload3dObjects.Hint">
+    <Value>Check to allow vendors to upload product 3D models.</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Configuration.Settings.Vendor.BlockTitle.Catalog">
     <Value>Catalog</Value>
   </LocaleResource>

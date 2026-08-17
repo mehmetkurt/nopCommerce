@@ -1776,7 +1776,8 @@ public partial class AdminMapperConfiguration : BaseMapperProfile
             .ForMember(model => model.ShowVendorOnProductDetailsPage_OverrideForStore, options => options.Ignore())
             .ForMember(model => model.TermsOfServiceEnabled_OverrideForStore, options => options.Ignore())
             .ForMember(model => model.VendorAttributeSearchModel, options => options.Ignore())
-            .ForMember(model => model.VendorsBlockItemsToDisplay_OverrideForStore, options => options.Ignore());
+            .ForMember(model => model.VendorsBlockItemsToDisplay_OverrideForStore, options => options.Ignore())
+            .ForMember(model => model.AllowVendorsToUpload3dObjects_OverrideForStore, options => options.Ignore());
         CreateMap<VendorSettingsModel, VendorSettings>()
             .ForMember(settings => settings.DefaultVendorPageSizeOptions, options => options.Ignore())
             .ForMember(settings => settings.MaximumProductPicturesNumber, options => options.Ignore());
