@@ -446,6 +446,10 @@ public class LocalizationMigration : MigrationBase
             "Payment.ExpireMonth.Required",
             "Payment.ExpireYear.Required",
             "Payment.SelectCreditCard",
+
+            //#8170
+            "Admin.ConfigurationSteps.PaymentMethods.Manual.Title",
+            "Admin.ConfigurationSteps.PaymentMethods.Manual.Text",
         });
 
         #endregion

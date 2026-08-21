@@ -10776,13 +10776,7 @@
   </LocaleResource>
   <LocaleResource Name="Admin.ConfigurationSteps.PaymentMethods.Configure.Title">
     <Value>Configure a payment method</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ConfigurationSteps.PaymentMethods.Manual.Text">
-    <Value><![CDATA[This is a special payment plugin that allows all orders to be successfully entered on the website, but it does NOT really charge a customer or make any calls to any live payment gateway. This payment method is recommended if you want to perform one of the following: <ul><li>Process all orders offline</li><li>Process them manually via another back-office system</li><li>Test the site end-to-end before going live</li></ul>]]></Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.ConfigurationSteps.PaymentMethods.Manual.Title">
-    <Value>Credit card (manual)</Value>
-  </LocaleResource>
+  </LocaleResource>  
   <LocaleResource Name="Admin.ConfigurationSteps.PaymentMethods.PayPalCommerce.Configure.Text">
     <Value>Now we’ll configure the PayPal Commerce payment method.</Value>
   </LocaleResource>

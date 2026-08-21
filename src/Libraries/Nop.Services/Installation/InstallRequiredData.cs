@@ -1953,7 +1953,7 @@ public partial class InstallationService
 
         await SaveSettingAsync(dictionary, new PaymentSettings
         {
-            ActivePaymentMethodSystemNames = ["Payments.CheckMoneyOrder", "Payments.Manual"],
+            ActivePaymentMethodSystemNames = ["Payments.CheckMoneyOrder"],
             AllowRePostingPayments = true,
             BypassPaymentMethodSelectionIfOnlyOne = true,
             ShowPaymentMethodDescriptions = true,
