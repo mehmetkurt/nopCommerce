@@ -128,10 +128,10 @@ public partial class ShoppingCartSettings : ISettings
     /// <summary>
     /// Gets or sets a value indicating whether vendor-specific shopping cart is enabled
     /// </summary>
-    public bool ShoppingCartVendorEnabled { get; set; }
+    public bool VendorEnabled { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether a vendor is required for the shopping cart
     /// </summary>
-    public bool ShoppingCartVendorRequired { get; set; }
+    public bool VendorRequired { get; set; }
 }

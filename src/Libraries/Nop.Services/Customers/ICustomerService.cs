@@ -66,7 +66,7 @@ public partial interface ICustomerService
     /// <summary>
     /// Gets customers with shopping carts
     /// </summary>
-    /// <param name="shoppingCartType">Shopping cart type; pass null to load all records</param>
+    /// <param name="shoppingCartTypes">Shopping cart types; pass null to load all records</param>
     /// <param name="storeId">Store identifier; pass 0 to load all records</param>
     /// <param name="productId">Product identifier; pass null to load all records</param>
     /// <param name="createdFromUtc">Created date from (UTC); pass null to load all records</param>
@@ -78,7 +78,7 @@ public partial interface ICustomerService
     /// A task that represents the asynchronous operation
     /// The task result contains the customers
     /// </returns>
-    Task<IPagedList<Customer>> GetCustomersWithShoppingCartsAsync(ShoppingCartType? shoppingCartType = null,
+    Task<IPagedList<Customer>> GetCustomersWithShoppingCartsAsync(List<int> shoppingCartTypes = null,
         int storeId = 0, int? productId = null,
         DateTime? createdFromUtc = null, DateTime? createdToUtc = null, int? countryId = null,
         int pageIndex = 0, int pageSize = int.MaxValue);

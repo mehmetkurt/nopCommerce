@@ -851,11 +851,11 @@ public class LocalizationMigration : MigrationBase
             ["Admin.Catalog.Products.Fields.PriceLists.NoPriceList"] = "No price lists available. Create at least one price list before mapping.",
 
             //#56
-            ["Admin.Configuration.Settings.ShoppingCart.ShoppingCartVendorEnabled"] = "Vendor filtering",
-            ["Admin.Configuration.Settings.ShoppingCart.ShoppingCartVendorEnabled.Hint"] = "Check to allow customers to filter shopping cart items by a specific vendor in the cart. It could be useful when you have multi-vendor configured in your store.",
-            ["Admin.Configuration.Settings.ShoppingCart.ShoppingCartVendorRequired"] = "Vendor required",
-            ["Admin.Configuration.Settings.ShoppingCart.ShoppingCartVendorRequired.Hint"] = "Check if customers are required to choose a vendor before starting the checkout process.",
-            ["Enums.Nop.Core.Domain.Orders.ShoppingCartType.Postponed"] = "Postponed",
+            ["Admin.Configuration.Settings.ShoppingCart.VendorEnabled"] = "Vendor filtering",
+            ["Admin.Configuration.Settings.ShoppingCart.VendorEnabled.Hint"] = "Check to allow customers to filter shopping cart items by a specific vendor in the cart. It could be useful when you have multi-vendor configured in your store.",
+            ["Admin.Configuration.Settings.ShoppingCart.VendorRequired"] = "Vendor required",
+            ["Admin.Configuration.Settings.ShoppingCart.VendorRequired.Hint"] = "Check if customers are required to choose a vendor before starting the checkout process.",
+            ["Enums.Nop.Core.Domain.Orders.ShoppingCartType.Stash"] = "Stash",
             ["ShoppingCart.VendorList"] = "Vendor",
             ["ShoppingCart.VendorList.All"] = "All",
             ["ShoppingCart.SelectVendorToCheckout"] = "Please select a vendor before proceeding to checkout",

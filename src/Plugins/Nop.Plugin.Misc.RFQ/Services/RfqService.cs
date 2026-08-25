@@ -858,9 +858,9 @@ public class RfqService
         var store = await _storeContext.GetCurrentStoreAsync();
         var quoteItems = await GetQuoteItemsAsync(quoteId);
 
+        //reset cart and checkout info
+        await _shoppingCartService.SetShoppingCartVendorAsync(customer, null, store.Id);
         await _shoppingCartService.ClearShoppingCartAsync(customer, store.Id);
-
-        //reset checkout info
         await _shoppingCartService.ResetCheckoutDataAsync(customer, store.Id);
 
         foreach (var quoteItem in quoteItems)

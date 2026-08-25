@@ -250,7 +250,7 @@ public partial class CustomerService : ICustomerService
     /// <summary>
     /// Gets customers with shopping carts
     /// </summary>
-    /// <param name="shoppingCartType">Shopping cart type; pass null to load all records</param>
+    /// <param name="shoppingCartTypes">Shopping cart types; pass null to load all records</param>
     /// <param name="storeId">Store identifier; pass 0 to load all records</param>
     /// <param name="productId">Product identifier; pass null to load all records</param>
     /// <param name="createdFromUtc">Created date from (UTC); pass null to load all records</param>
@@ -262,7 +262,7 @@ public partial class CustomerService : ICustomerService
     /// A task that represents the asynchronous operation
     /// The task result contains the customers
     /// </returns>
-    public virtual async Task<IPagedList<Customer>> GetCustomersWithShoppingCartsAsync(ShoppingCartType? shoppingCartType = null,
+    public virtual async Task<IPagedList<Customer>> GetCustomersWithShoppingCartsAsync(List<int> shoppingCartTypes = null,
         int storeId = 0, int? productId = null,
         DateTime? createdFromUtc = null, DateTime? createdToUtc = null, int? countryId = null,
         int pageIndex = 0, int pageSize = int.MaxValue)
@@ -271,8 +271,8 @@ public partial class CustomerService : ICustomerService
         var items = _shoppingCartRepository.Table;
 
         //filter by type
-        if (shoppingCartType.HasValue)
-            items = items.Where(item => item.ShoppingCartTypeId == (int)shoppingCartType.Value);
+        if (shoppingCartTypes is not null)
+            items = items.Where(item => shoppingCartTypes.Contains(item.ShoppingCartTypeId));
 
         //filter shopping cart items by store
         if (storeId > 0 && !_shoppingCartSettings.CartsSharedBetweenStores)
@@ -294,13 +294,15 @@ public partial class CustomerService : ICustomerService
         //filter customers by billing country
         if (countryId > 0)
         {
-            customers = from c in customers
+            customers =
+                from c in customers
                 join a in _customerAddressRepository.Table on c.BillingAddressId equals a.Id
                 where a.CountryId == countryId
                 select c;
         }
 
-        var customersWithCarts = from c in customers
+        var customersWithCarts =
+            from c in customers
             join item in items on c.Id equals item.CustomerId
             //we change ordering for the MySQL engine to avoid problems with the ONLY_FULL_GROUP_BY server property that is set by default since the 5.7.5 version
             orderby _dataProvider.ConfigurationName == "MySql" ? c.CreatedOnUtc : item.CreatedOnUtc descending
@@ -389,7 +391,8 @@ public partial class CustomerService : ICustomerService
         if (customerGuids == null)
             return null;
 
-        var query = from c in _customerRepository.Table
+        var query =
+            from c in _customerRepository.Table
             where customerGuids.Contains(c.CustomerGuid)
             select c;
         var customers = await query.ToListAsync();
@@ -410,7 +413,8 @@ public partial class CustomerService : ICustomerService
         if (customerGuid == Guid.Empty)
             return null;
 
-        var query = from c in _customerRepository.Table
+        var query =
+            from c in _customerRepository.Table
             where c.CustomerGuid == customerGuid
             orderby c.Id
             select c;
@@ -431,7 +435,8 @@ public partial class CustomerService : ICustomerService
         if (string.IsNullOrWhiteSpace(email))
             return null;
 
-        var query = from c in _customerRepository.Table
+        var query =
+            from c in _customerRepository.Table
             orderby c.Id
             where c.Email == email
             select c;
@@ -453,7 +458,8 @@ public partial class CustomerService : ICustomerService
         if (string.IsNullOrWhiteSpace(systemName))
             return null;
 
-        var query = from c in _customerRepository.Table
+        var query =
+            from c in _customerRepository.Table
             orderby c.Id
             where c.SystemName == systemName
             select c;
@@ -552,7 +558,8 @@ public partial class CustomerService : ICustomerService
         if (string.IsNullOrWhiteSpace(username))
             return null;
 
-        var query = from c in _customerRepository.Table
+        var query =
+            from c in _customerRepository.Table
             orderby c.Id
             where c.Username == username
             select c;
@@ -668,12 +675,14 @@ public partial class CustomerService : ICustomerService
     {
         var guestRole = await GetCustomerRoleBySystemNameAsync(NopCustomerDefaults.GuestsRoleName);
 
-        var allGuestCustomers = from guest in _customerRepository.Table
+        var allGuestCustomers =
+            from guest in _customerRepository.Table
             join ccm in _customerCustomerRoleMappingRepository.Table on guest.Id equals ccm.CustomerId
             where ccm.CustomerRoleId == guestRole.Id
             select guest;
 
-        var guestsToDelete = from guest in _customerRepository.Table
+        var guestsToDelete =
+            from guest in _customerRepository.Table
             join g in allGuestCustomers on guest.Id equals g.Id
             from sCart in _shoppingCartRepository.Table.Where(sci => sci.CustomerId == guest.Id).DefaultIfEmpty()
             from order in _orderRepository.Table.Where(o => o.CustomerId == guest.Id).DefaultIfEmpty()
@@ -1217,7 +1226,8 @@ public partial class CustomerService : ICustomerService
 
         var key = _staticCacheManager.PrepareKeyForDefaultCache(NopCustomerServicesDefaults.CustomerRolesBySystemNameCacheKey, systemName);
 
-        var query = from cr in _customerRoleRepository.Table
+        var query =
+            from cr in _customerRoleRepository.Table
             orderby cr.Id
             where cr.SystemName == systemName
             select cr;
@@ -1603,7 +1613,8 @@ public partial class CustomerService : ICustomerService
     /// </returns>
     public virtual async Task<IList<Address>> GetAddressesByCustomerIdAsync(int customerId)
     {
-        var query = from address in _customerAddressRepository.Table
+        var query =
+            from address in _customerAddressRepository.Table
             join cam in _customerAddressMappingRepository.Table on address.Id equals cam.AddressId
             where cam.CustomerId == customerId
             select address;
@@ -1625,7 +1636,8 @@ public partial class CustomerService : ICustomerService
         if (customerId == 0 || addressId == 0)
             return null;
 
-        var query = from address in _customerAddressRepository.Table
+        var query =
+            from address in _customerAddressRepository.Table
             join cam in _customerAddressMappingRepository.Table on address.Id equals cam.AddressId
             where cam.CustomerId == customerId && address.Id == addressId
             select address;

@@ -9758,18 +9758,6 @@
   <LocaleResource Name="Admin.Configuration.Settings.ShoppingCart.MoveItemsFromWishlistToCart.Hint">
     <Value>Check to move products from wishlist to the cart when clicking "Add to cart" button. Otherwise, they are copied.</Value>
   </LocaleResource>
-  <LocaleResource Name="Admin.Configuration.Settings.ShoppingCart.ShoppingCartVendorEnabled">
-    <Value>Vendor filtering</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.Configuration.Settings.ShoppingCart.ShoppingCartVendorEnabled.Hint">
-    <Value>Check to allow customers to filter shopping cart items by a specific vendor in the cart. It could be useful when you have multi-vendor configured in your store.</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.Configuration.Settings.ShoppingCart.ShoppingCartVendorRequired">
-    <Value>Vendor required</Value>
-  </LocaleResource>
-  <LocaleResource Name="Admin.Configuration.Settings.ShoppingCart.ShoppingCartVendorRequired.Hint">
-    <Value>Check if customers are required to choose a vendor before starting the checkout process.</Value>
-  </LocaleResource>
   <LocaleResource Name="Admin.Configuration.Settings.ShoppingCart.ShowDiscountBox">
     <Value>Show discount box</Value>
   </LocaleResource>
@@ -9799,6 +9787,18 @@
   </LocaleResource>
   <LocaleResource Name="Admin.Configuration.Settings.ShoppingCart.ShowProductImagesOnWishList.Hint">
     <Value>Determines whether product images should be displayed in customer wishlists.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.ShoppingCart.VendorEnabled">
+    <Value>Vendor filtering</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.ShoppingCart.VendorEnabled.Hint">
+    <Value>Check to allow customers to filter shopping cart items by a specific vendor in the cart. It could be useful when you have multi-vendor configured in your store.</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.ShoppingCart.VendorRequired">
+    <Value>Vendor required</Value>
+  </LocaleResource>
+  <LocaleResource Name="Admin.Configuration.Settings.ShoppingCart.VendorRequired.Hint">
+    <Value>Check if customers are required to choose a vendor before starting the checkout process.</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Configuration.Settings.StoreScope">
     <Value>Multi-store configuration for</Value>
@@ -18424,11 +18424,11 @@
   <LocaleResource Name="Enums.Nop.Core.Domain.Orders.ReturnRequestStatus.ReturnAuthorized">
     <Value>Return authorized</Value>
   </LocaleResource>
-  <LocaleResource Name="Enums.Nop.Core.Domain.Orders.ShoppingCartType.Postponed">
-    <Value>Postponed</Value>
-  </LocaleResource>
   <LocaleResource Name="Enums.Nop.Core.Domain.Orders.ShoppingCartType.ShoppingCart">
     <Value>Shopping cart</Value>
+  </LocaleResource>
+  <LocaleResource Name="Enums.Nop.Core.Domain.Orders.ShoppingCartType.Stash">
+    <Value>Stash</Value>
   </LocaleResource>
   <LocaleResource Name="Enums.Nop.Core.Domain.Orders.ShoppingCartType.Wishlist">
     <Value>Wishlist</Value>

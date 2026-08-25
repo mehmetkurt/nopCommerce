@@ -16,7 +16,7 @@ public enum ShoppingCartType
     Wishlist = 2,
 
     /// <summary>
-    /// Postponed cart
+    /// Stash
     /// </summary>
-    Postponed
+    Stash
 }

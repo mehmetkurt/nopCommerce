@@ -52,7 +52,6 @@ public partial class ShoppingCartService : IShoppingCartService
     protected readonly IProductAttributeParser _productAttributeParser;
     protected readonly IProductAttributeService _productAttributeService;
     protected readonly IProductService _productService;
-    protected readonly IRepository<Product> _productRepository;
     protected readonly IRepository<ShoppingCartItem> _sciRepository;
     protected readonly IShippingService _shippingService;
     protected readonly IShortTermCacheManager _shortTermCacheManager;
@@ -89,7 +88,6 @@ public partial class ShoppingCartService : IShoppingCartService
         IProductAttributeParser productAttributeParser,
         IProductAttributeService productAttributeService,
         IProductService productService,
-        IRepository<Product> productRepository,
         IRepository<ShoppingCartItem> sciRepository,
         IShippingService shippingService,
         IShortTermCacheManager shortTermCacheManager,
@@ -122,7 +120,6 @@ public partial class ShoppingCartService : IShoppingCartService
         _productAttributeParser = productAttributeParser;
         _productAttributeService = productAttributeService;
         _productService = productService;
-        _productRepository = productRepository;
         _sciRepository = sciRepository;
         _shippingService = shippingService;
         _shortTermCacheManager = shortTermCacheManager;
@@ -207,7 +204,8 @@ public partial class ShoppingCartService : IShoppingCartService
     /// <returns>A task that represents the asynchronous operation</returns>
     protected virtual async Task UpdateHasShoppingCartItemsAsync(Customer customer)
     {
-        var hasShoppingCartItems = await _sciRepository.Table.AnyAsync(sci => sci.CustomerId == customer.Id);
+        var hasShoppingCartItems = await _sciRepository.Table
+            .AnyAsync(sci => sci.CustomerId == customer.Id && sci.ShoppingCartTypeId != (int)ShoppingCartType.Stash);
         if (hasShoppingCartItems != customer.HasShoppingCartItems)
         {
             customer.HasShoppingCartItems = hasShoppingCartItems;
@@ -319,21 +317,6 @@ public partial class ShoppingCartService : IShoppingCartService
         }
 
         return warnings;
-    }
-
-    /// <summary>
-    /// Gets the vendor ID applied to the customer's shopping cart
-    /// </summary>
-    /// <returns>A task that represents the asynchronous operation</returns>
-    protected virtual async Task<int> GetCurrentShoppingCartVendorAsync()
-    {
-        if (!_shoppingCartSettings.ShoppingCartVendorEnabled)
-            return 0;
-
-        var customer = await _workContext.GetCurrentCustomerAsync();
-        var store = await _storeContext.GetCurrentStoreAsync();
-
-        return await _genericAttributeService.GetAttributeAsync<int>(customer, NopCustomerDefaults.ShoppingCartVendorAttribute, store.Id);
     }
 
     /// <summary>
@@ -618,6 +601,8 @@ public partial class ShoppingCartService : IShoppingCartService
         //reset checkout data
         if (resetCheckoutData)
             await ResetCheckoutDataAsync(customer, shoppingCartItem.StoreId);
+        if (_shoppingCartSettings.VendorEnabled)
+            await SetShoppingCartVendorAsync(customer, null, storeId);
 
         //delete item
         await _sciRepository.DeleteAsync(shoppingCartItem);
@@ -752,7 +737,7 @@ public partial class ShoppingCartService : IShoppingCartService
     /// Gets shopping cart
     /// </summary>
     /// <param name="customer">Customer</param>
-    /// <param name="shoppingCartType">Shopping cart type; pass null to load all records</param>
+    /// <param name="shoppingCartTypes">Shopping cart types; pass null to load all records</param>
     /// <param name="storeId">Store identifier; pass 0 to load all records</param>
     /// <param name="productId">Product identifier; pass null to load all records</param>
     /// <param name="createdFromUtc">Created date from (UTC); pass null to load all records</param>
@@ -762,27 +747,7 @@ public partial class ShoppingCartService : IShoppingCartService
     /// A task that represents the asynchronous operation
     /// The task result contains the shopping Cart
     /// </returns>
-    public virtual Task<IList<ShoppingCartItem>> GetShoppingCartAsync(Customer customer, ShoppingCartType shoppingCartType,
-        int storeId = 0, int? productId = null, DateTime? createdFromUtc = null, DateTime? createdToUtc = null, int? customWishlistId = null)
-    {
-        return GetShoppingCartAsync(customer, [(int)shoppingCartType], storeId, productId, createdFromUtc, createdToUtc, customWishlistId);
-    }
-
-    /// <summary>
-    /// Gets shopping cart
-    /// </summary>
-    /// <param name="customer">Customer</param>
-    /// <param name="shoppingCartTypes">Array contains shopping cart types; pass null to load all records</param>
-    /// <param name="storeId">Store identifier; pass 0 to load all records</param>
-    /// <param name="productId">Product identifier; pass null to load all records</param>
-    /// <param name="createdFromUtc">Created date from (UTC); pass null to load all records</param>
-    /// <param name="createdToUtc">Created date to (UTC); pass null to load all records</param>
-    /// <param name="customWishlistId">Custom wishlist identifier; pass 0 to load all records from all wishlists, pass null to load records from the default wishlist</param>
-    /// <returns>
-    /// A task that represents the asynchronous operation
-    /// The task result contains the shopping Cart
-    /// </returns>
-    public virtual async Task<IList<ShoppingCartItem>> GetShoppingCartAsync(Customer customer, int[] shoppingCartTypes = null,
+    public virtual async Task<IList<ShoppingCartItem>> GetShoppingCartAsync(Customer customer, List<int> shoppingCartTypes = null,
         int storeId = 0, int? productId = null, DateTime? createdFromUtc = null, DateTime? createdToUtc = null, int? customWishlistId = null)
     {
         ArgumentNullException.ThrowIfNull(customer);
@@ -812,6 +777,26 @@ public partial class ShoppingCartService : IShoppingCartService
             items = items.Where(item => createdToUtc.Value >= item.CreatedOnUtc);
 
         return await _shortTermCacheManager.GetAsync(async () => await items.ToListAsync(), NopOrderDefaults.ShoppingCartItemsAllCacheKey, customer, shoppingCartTypes, storeId, productId, createdFromUtc, createdToUtc, customWishlistId);
+    }
+
+    /// <summary>
+    /// Gets shopping cart
+    /// </summary>
+    /// <param name="customer">Customer</param>
+    /// <param name="shoppingCartType">Shopping cart type</param>
+    /// <param name="storeId">Store identifier; pass 0 to load all records</param>
+    /// <param name="productId">Product identifier; pass null to load all records</param>
+    /// <param name="createdFromUtc">Created date from (UTC); pass null to load all records</param>
+    /// <param name="createdToUtc">Created date to (UTC); pass null to load all records</param>
+    /// <param name="customWishlistId">Custom wishlist identifier; pass 0 to load all records from all wishlists, pass null to load records from the default wishlist</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the shopping Cart
+    /// </returns>
+    public virtual Task<IList<ShoppingCartItem>> GetShoppingCartAsync(Customer customer, ShoppingCartType shoppingCartType,
+        int storeId = 0, int? productId = null, DateTime? createdFromUtc = null, DateTime? createdToUtc = null, int? customWishlistId = null)
+    {
+        return GetShoppingCartAsync(customer, [(int)shoppingCartType], storeId, productId, createdFromUtc, createdToUtc, customWishlistId);
     }
 
     /// <summary>
@@ -1232,8 +1217,14 @@ public partial class ShoppingCartService : IShoppingCartService
         if (hasStandardProducts && hasRecurringProducts)
             warnings.Add(await _localizationService.GetResourceAsync("ShoppingCart.CannotMixStandardAndAutoshipProducts"));
 
-        if (_shoppingCartSettings.ShoppingCartVendorEnabled && _shoppingCartSettings.ShoppingCartVendorRequired && vendorsIds.Count > 1 && !vendorsIds.Contains(await GetCurrentShoppingCartVendorAsync()))
-            warnings.Add(await _localizationService.GetResourceAsync("ShoppingCart.SelectVendorToCheckout"));
+        var store = await _storeContext.GetCurrentStoreAsync();
+        if (_shoppingCartSettings.VendorEnabled && _shoppingCartSettings.VendorRequired && vendorsIds.Count > 1)
+        {
+            var customer = await _customerService.GetCustomerByIdAsync(shoppingCart.FirstOrDefault().CustomerId);
+            var vendorId = await _genericAttributeService.GetAttributeAsync<int>(customer, NopCustomerDefaults.ShoppingCartVendorAttribute, store.Id);
+            if (vendorId == 0 || !vendorsIds.Contains(vendorId))
+                warnings.Add(await _localizationService.GetResourceAsync("ShoppingCart.SelectVendorToCheckout"));
+        }
 
         //recurring cart validation
         if (hasRecurringProducts)
@@ -1255,7 +1246,6 @@ public partial class ShoppingCartService : IShoppingCartService
 
         //existing checkout attributes
         var excludeShippableAttributes = !await ShoppingCartRequiresShippingAsync(shoppingCart);
-        var store = await _storeContext.GetCurrentStoreAsync();
         var attributes2 = await _checkoutAttributeService.GetAllAttributesAsync(_staticCacheManager, _storeMappingService, store.Id, excludeShippableAttributes);
 
         //validate conditional attributes only (if specified)
@@ -1562,10 +1552,11 @@ public partial class ShoppingCartService : IShoppingCartService
         ArgumentNullException.ThrowIfNull(shoppingCart);
         ArgumentNullException.ThrowIfNull(product);
 
-        var checkPostponed = shoppingCartType == ShoppingCartType.ShoppingCart;
-
-        return await shoppingCart.Where(sci => sci.ShoppingCartType == shoppingCartType || checkPostponed && sci.ShoppingCartType == ShoppingCartType.Postponed)
-            .FirstOrDefaultAwaitAsync(async sci => await ShoppingCartItemIsEqualAsync(sci, product, attributesXml, customerEnteredPrice, rentalStartDate, rentalEndDate));
+        return await shoppingCart
+            .Where(sci => sci.ShoppingCartType == shoppingCartType
+                || (shoppingCartType == ShoppingCartType.ShoppingCart && sci.ShoppingCartType == ShoppingCartType.Stash))
+            .FirstOrDefaultAwaitAsync(async sci
+                => await ShoppingCartItemIsEqualAsync(sci, product, attributesXml, customerEnteredPrice, rentalStartDate, rentalEndDate));
     }
 
     /// <summary>
@@ -1623,6 +1614,8 @@ public partial class ShoppingCartService : IShoppingCartService
 
         //reset checkout info
         await ResetCheckoutDataAsync(customer, storeId);
+        if (_shoppingCartSettings.VendorEnabled)
+            await SetShoppingCartVendorAsync(customer, null, storeId);
 
         var cart = await GetShoppingCartAsync(customer, shoppingCartType, storeId);
 
@@ -1884,6 +1877,10 @@ public partial class ShoppingCartService : IShoppingCartService
         if (fromCustomer.Id == toCustomer.Id)
             return; //the same customer
 
+        var store = await _storeContext.GetCurrentStoreAsync();
+        var selectedVendorId = await _genericAttributeService
+            .GetAttributeAsync<int?>(fromCustomer, NopCustomerDefaults.ShoppingCartVendorAttribute, store.Id);
+
         //shopping cart items
         var fromCart = await GetShoppingCartAsync(fromCustomer);
 
@@ -1915,107 +1912,13 @@ public partial class ShoppingCartService : IShoppingCartService
                 await _customerService.ApplyGiftCardCouponCodeAsync(toCustomer, code);
         }
 
-        var store = await _storeContext.GetCurrentStoreAsync();
-
         //move selected checkout attributes
-        var checkoutAttributesXml = await _genericAttributeService.GetAttributeAsync<string>(fromCustomer, NopCustomerDefaults.CheckoutAttributes, store.Id);
+        var checkoutAttributesXml = await _genericAttributeService
+            .GetAttributeAsync<string>(fromCustomer, NopCustomerDefaults.CheckoutAttributes, store.Id);
         await _genericAttributeService.SaveAttributeAsync(toCustomer, NopCustomerDefaults.CheckoutAttributes, checkoutAttributesXml, store.Id);
 
         //move selected vendor
-        var selectedVendorId = await _genericAttributeService.GetAttributeAsync<int>(fromCustomer, NopCustomerDefaults.ShoppingCartVendorAttribute, store.Id);
-        await _genericAttributeService.SaveAttributeAsync(toCustomer, NopCustomerDefaults.ShoppingCartVendorAttribute, selectedVendorId, store.Id);
-    }
-
-    /// <summary>
-    /// Reset data required for checkout
-    /// </summary>
-    /// <param name="customer">Customer</param>
-    /// <param name="storeId">Store identifier</param>
-    /// <param name="clearCouponCodes">A value indicating whether to clear coupon code</param>
-    /// <param name="clearCheckoutAttributes">A value indicating whether to clear selected checkout attributes</param>
-    /// <param name="clearRewardPoints">A value indicating whether to clear "Use reward points" flag</param>
-    /// <param name="clearShippingMethod">A value indicating whether to clear selected shipping method</param>
-    /// <param name="clearPaymentMethod">A value indicating whether to clear selected payment method</param>
-    /// <param name="clearSelectedVendor">A value indicating whether to clear selected vendor</param>
-    /// <returns>A task that represents the asynchronous operation</returns>
-    public virtual async Task ResetCheckoutDataAsync(Customer customer, int storeId,
-        bool clearCouponCodes = false, bool clearCheckoutAttributes = false,
-        bool clearRewardPoints = true, bool clearShippingMethod = true,
-        bool clearPaymentMethod = true, bool clearSelectedVendor = true)
-    {
-        ArgumentNullException.ThrowIfNull(customer);
-
-        //clear entered coupon codes
-        if (clearCouponCodes)
-        {
-            await _genericAttributeService.SaveAttributeAsync<string>(customer, NopCustomerDefaults.DiscountCouponCodeAttribute, null);
-            await _genericAttributeService.SaveAttributeAsync<string>(customer, NopCustomerDefaults.GiftCardCouponCodesAttribute, null);
-        }
-
-        //clear checkout attributes
-        if (clearCheckoutAttributes)
-            await _genericAttributeService.SaveAttributeAsync<string>(customer, NopCustomerDefaults.CheckoutAttributes, null, storeId);
-
-        //clear reward points flag
-        if (clearRewardPoints)
-            await _genericAttributeService.SaveAttributeAsync(customer, NopCustomerDefaults.UseRewardPointsDuringCheckoutAttribute, false, storeId);
-
-        //clear selected shipping method
-        if (clearShippingMethod)
-        {
-            await _genericAttributeService.SaveAttributeAsync<ShippingOption>(customer, NopCustomerDefaults.SelectedShippingOptionAttribute, null, storeId);
-            await _genericAttributeService.SaveAttributeAsync<ShippingOption>(customer, NopCustomerDefaults.OfferedShippingOptionsAttribute, null, storeId);
-            await _genericAttributeService.SaveAttributeAsync<PickupPoint>(customer, NopCustomerDefaults.SelectedPickupPointAttribute, null, storeId);
-            await _genericAttributeService.SaveAttributeAsync<DateTime?>(customer, NopCustomerDefaults.DesiredDeliveryDate, null, storeId);
-        }
-
-        //clear selected payment method
-        if (clearPaymentMethod)
-            await _genericAttributeService.SaveAttributeAsync<string>(customer, NopCustomerDefaults.SelectedPaymentMethodAttribute, null, storeId);
-
-        //clear selected vendor
-        if (clearSelectedVendor)
-        { 
-            await _genericAttributeService.SaveAttributeAsync<int?>(customer, NopCustomerDefaults.ShoppingCartVendorAttribute, null, storeId);
-            await SetShoppingCartVendorAsync(customer, 0, storeId);
-        }
-
-        await _eventPublisher.PublishAsync(new ResetCheckoutDataEvent(customer, storeId));
-    }
-
-    /// <summary>
-    /// Set the vendor for the customer's shopping cart
-    /// </summary>
-    /// <param name="customer">Customer</param>
-    /// <param name="vendorId">Vendor identifier</param>
-    /// <param name="storeId">Store identifier</param>
-    /// <returns>A task that represents the asynchronous operation</returns>
-    public virtual async Task SetShoppingCartVendorAsync(Customer customer, int vendorId, int storeId = 0)
-    {
-        ArgumentNullException.ThrowIfNull(customer);
-
-        if (!_shoppingCartSettings.ShoppingCartVendorEnabled)
-            return;
-
-        await _genericAttributeService.SaveAttributeAsync(customer, NopCustomerDefaults.ShoppingCartVendorAttribute, vendorId, storeId);
-
-        var scTypes = new int[] { (int)ShoppingCartType.ShoppingCart, (int)ShoppingCartType.Postponed };
-        var shoppingCart = await GetShoppingCartAsync(customer, scTypes, storeId);
-
-        foreach (var item in shoppingCart)
-        {
-            if (vendorId == 0)
-            {
-                item.ShoppingCartType = ShoppingCartType.ShoppingCart;
-                await _sciRepository.UpdateAsync(item);
-                continue;
-            }
-
-            var product = await _productService.GetProductByIdAsync(item.ProductId);
-
-            item.ShoppingCartType = product.VendorId == vendorId ? ShoppingCartType.ShoppingCart : ShoppingCartType.Postponed;
-            await _sciRepository.UpdateAsync(item);
-        }
+        await SetShoppingCartVendorAsync(toCustomer, selectedVendorId, store.Id);
     }
 
     /// <summary>
@@ -2065,6 +1968,45 @@ public partial class ShoppingCartService : IShoppingCartService
             await _genericAttributeService.SaveAttributeAsync<string>(customer, NopCustomerDefaults.SelectedPaymentMethodAttribute, null, storeId);
 
         await _eventPublisher.PublishAsync(new ResetCheckoutDataEvent(customer, storeId));
+    }
+
+    /// <summary>
+    /// Set the vendor for the customer's shopping cart
+    /// </summary>
+    /// <param name="customer">Customer</param>
+    /// <param name="vendorId">Vendor identifier; pass null to clear</param>
+    /// <param name="storeId">Store identifier</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    public virtual async Task SetShoppingCartVendorAsync(Customer customer, int? vendorId, int storeId)
+    {
+        ArgumentNullException.ThrowIfNull(customer);
+
+        if (vendorId == 0)
+            vendorId = null;
+
+        if (vendorId is null && await _genericAttributeService.GetAttributeAsync<int?>(customer, NopCustomerDefaults.ShoppingCartVendorAttribute, storeId) is null)
+            return;
+
+        await _genericAttributeService.SaveAttributeAsync(customer, NopCustomerDefaults.ShoppingCartVendorAttribute, vendorId, storeId);
+
+        var itemsToUpdate = new List<ShoppingCartItem>();
+        var shoppingCart = await GetShoppingCartAsync(customer, [(int)ShoppingCartType.ShoppingCart, (int)ShoppingCartType.Stash], storeId);
+        foreach (var item in shoppingCart)
+        {
+            var newShoppingCartType = vendorId is null || (await _productService.GetProductByIdAsync(item.ProductId) is Product product && product.VendorId == vendorId)
+                ? ShoppingCartType.ShoppingCart
+                : ShoppingCartType.Stash;
+            if (item.ShoppingCartType == newShoppingCartType)
+                continue;
+
+            item.ShoppingCartType = newShoppingCartType;
+            itemsToUpdate.Add(item);
+        }
+        if (itemsToUpdate.Any())
+        {
+            await _sciRepository.UpdateAsync(itemsToUpdate);
+            await UpdateHasShoppingCartItemsAsync(customer);
+        }
     }
 
     /// <summary>

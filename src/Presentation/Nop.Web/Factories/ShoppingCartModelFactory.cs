@@ -773,22 +773,43 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
         return model;
     }
 
+    /// <summary>
+    /// Prepare available vendors
+    /// </summary>
+    /// <param name="customer">Customer</param>
+    /// <param name="storeId">Store id</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the list of available vendors
+    /// </returns>
     protected virtual async Task<List<SelectListItem>> PrepareAvailableVendorsListAsync(Customer customer, int storeId)
     {
-        var cart = await _shoppingCartService.GetShoppingCartAsync(customer, [(int)ShoppingCartType.ShoppingCart, (int)ShoppingCartType.Postponed], storeId);
-        
+        var result = new List<SelectListItem>();
+
+        var cart = await _shoppingCartService
+            .GetShoppingCartAsync(customer, [(int)ShoppingCartType.ShoppingCart, (int)ShoppingCartType.Stash], storeId);
+
         var vendors = await cart
-            .SelectAwait(async sci => await _vendorService.GetVendorByProductIdAsync(sci.ProductId))
-            .Where(v => v != null)
-            .DistinctBy(v => v.Id)
-            .OrderBy(v => v.DisplayOrder).ThenBy(v => v.Id)
+            .SelectAwait(async item => await _vendorService.GetVendorByProductIdAsync(item.ProductId))
             .ToListAsync();
 
-        var result = await vendors.SelectAwait(async vendor => new SelectListItem
+        if (vendors.Any(vendor => vendor is not null))
         {
-            Text = await _localizationService.GetLocalizedAsync(vendor, x => x.Name),
-            Value = vendor.Id.ToString()
-        }).ToListAsync();
+            //check whether all items are from the same vendor
+            var distinctVendors = vendors
+                .Where(vendor => vendor is not null)
+                .DistinctBy(vendor => vendor.Id)
+                .OrderBy(vendor => vendor.DisplayOrder).ThenBy(vendor => vendor.Id)
+                .ToList();
+            if (distinctVendors.Count > 1 || vendors.Any(vendor => vendor is null))
+            {
+                result.AddRange(await distinctVendors.SelectAwait(async vendor => new SelectListItem
+                {
+                    Text = await _localizationService.GetLocalizedAsync(vendor, x => x.Name),
+                    Value = vendor.Id.ToString()
+                }).ToListAsync());
+            }
+        }
 
         result.Insert(0, new(await _localizationService.GetResourceAsync("ShoppingCart.VendorList.All"), "0"));
 
@@ -973,11 +994,12 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
             model.Items.Add(cartItemModel);
         }
 
-        if (_shoppingCartSettings.ShoppingCartVendorEnabled)
+        if (_shoppingCartSettings.VendorEnabled)
         {
-            model.SelectedVendorId = await _genericAttributeService.GetAttributeAsync<int>(customer, NopCustomerDefaults.ShoppingCartVendorAttribute, store.Id);
+            model.SelectedVendorId = await _genericAttributeService
+                .GetAttributeAsync<int>(customer, NopCustomerDefaults.ShoppingCartVendorAttribute, store.Id);
             model.AvailableVendors = await PrepareAvailableVendorsListAsync(customer, store.Id);
-            model.DisplayVendorList = _shoppingCartSettings.ShoppingCartVendorEnabled && model.AvailableVendors.Count > 1;
+            model.DisplayVendorList = model.AvailableVendors.Count > 1;
         }
 
         //payment methods

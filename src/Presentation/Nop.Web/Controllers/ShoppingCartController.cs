@@ -825,15 +825,9 @@ public partial class ShoppingCartController : BasePublicController
         {
             var store = await _storeContext.GetCurrentStoreAsync();
 
-            var scTypes = new HashSet<int>()
-            {
-                shoppingCartTypeId,
-                (int)ShoppingCartType.Postponed
-            };
-
             //search with the same cart type as specified
             var cart = await _shoppingCartService.GetShoppingCartAsync(await _workContext.GetCurrentCustomerAsync(),
-                scTypes.ToArray(), store.Id, customWishlistId: customwishlistid);
+                [shoppingCartTypeId, (int)ShoppingCartType.Stash], store.Id, customWishlistId: customwishlistid);
 
             updatecartitem = cart.FirstOrDefault(x => x.Id == updatecartitemid);
             //not found? let's ignore it. in this case we'll add a new item
@@ -1279,10 +1273,13 @@ public partial class ShoppingCartController : BasePublicController
 
     [HttpPost, ActionName("Cart")]
     [FormValueRequired("changevendorcart")]
-    public virtual async Task<IActionResult> ChangeVendorCart(ShoppingCartModel model, IFormCollection form)
+    public virtual async Task<IActionResult> ChangeVendorCart(ShoppingCartModel model)
     {
         if (!await _permissionService.AuthorizeAsync(StandardPermission.PublicStore.ENABLE_SHOPPING_CART))
             return RedirectToRoute(NopRouteNames.General.HOMEPAGE);
+
+        if (!_shoppingCartSettings.VendorEnabled)
+            return RedirectToRoute(NopRouteNames.General.CART);
 
         var customer = await _workContext.GetCurrentCustomerAsync();
         var store = await _storeContext.GetCurrentStoreAsync();
@@ -1875,7 +1872,7 @@ public partial class ShoppingCartController : BasePublicController
         }
 
         // Check if customer has reached the maximum number of custom wishlists allowed
-        var maximumNumberOfCustomWishlist = _shoppingCartSettings.MaximumNumberOfCustomWishlist;        
+        var maximumNumberOfCustomWishlist = _shoppingCartSettings.MaximumNumberOfCustomWishlist;
         if (currentWishlists.Count >= maximumNumberOfCustomWishlist)
         {
             return Json(new
@@ -2025,7 +2022,7 @@ public partial class ShoppingCartController : BasePublicController
             redirect = Url.RouteUrl(NopRouteNames.General.WISHLIST, new { list = wishlistId })
         });
     }
-    
+
     [HttpPost]
     public virtual async Task<IActionResult> DeleteWishlist(int wishlistId)
     {
