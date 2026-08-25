@@ -861,7 +861,7 @@ public class RfqService
         await _shoppingCartService.ClearShoppingCartAsync(customer, store.Id);
 
         //reset checkout info
-        await _customerService.ResetCheckoutDataAsync(customer, store.Id);
+        await _shoppingCartService.ResetCheckoutDataAsync(customer, store.Id);
 
         foreach (var quoteItem in quoteItems)
         {

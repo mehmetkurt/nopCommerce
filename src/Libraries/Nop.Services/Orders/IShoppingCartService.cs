@@ -309,6 +309,22 @@ public partial interface IShoppingCartService
     Task MigrateShoppingCartAsync(Customer fromCustomer, Customer toCustomer, bool includeCouponCodes);
 
     /// <summary>
+    /// Reset data required for checkout
+    /// </summary>
+    /// <param name="customer">Customer</param>
+    /// <param name="storeId">Store identifier</param>
+    /// <param name="clearCouponCodes">A value indicating whether to clear coupon code</param>
+    /// <param name="clearCheckoutAttributes">A value indicating whether to clear selected checkout attributes</param>
+    /// <param name="clearRewardPoints">A value indicating whether to clear "Use reward points" flag</param>
+    /// <param name="clearShippingMethod">A value indicating whether to clear selected shipping method</param>
+    /// <param name="clearPaymentMethod">A value indicating whether to clear selected payment method</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task ResetCheckoutDataAsync(Customer customer, int storeId,
+        bool clearCouponCodes = false, bool clearCheckoutAttributes = false,
+        bool clearRewardPoints = true, bool clearShippingMethod = true,
+        bool clearPaymentMethod = true);
+
+    /// <summary>
     /// Indicates whether the shopping cart requires shipping
     /// </summary>
     /// <param name="shoppingCart">Shopping cart</param>

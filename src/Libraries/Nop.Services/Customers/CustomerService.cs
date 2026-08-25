@@ -6,9 +6,7 @@ using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Orders;
-using Nop.Core.Domain.Shipping;
 using Nop.Core.Domain.Tax;
-using Nop.Core.Events;
 using Nop.Core.Infrastructure;
 using Nop.Data;
 using Nop.Services.Common;
@@ -25,7 +23,6 @@ public partial class CustomerService : ICustomerService
     #region Fields
 
     protected readonly CustomerSettings _customerSettings;
-    protected readonly IEventPublisher _eventPublisher;
     protected readonly IGenericAttributeService _genericAttributeService;
     protected readonly IHtmlFormatter _htmlFormatter;
     protected readonly INopDataProvider _dataProvider;
@@ -53,7 +50,6 @@ public partial class CustomerService : ICustomerService
     #region Ctor
 
     public CustomerService(CustomerSettings customerSettings,
-        IEventPublisher eventPublisher,
         IGenericAttributeService genericAttributeService,
         IHtmlFormatter htmlFormatter,
         INopDataProvider dataProvider,
@@ -77,7 +73,6 @@ public partial class CustomerService : ICustomerService
         TaxSettings taxSettings)
     {
         _customerSettings = customerSettings;
-        _eventPublisher = eventPublisher;
         _genericAttributeService = genericAttributeService;
         _htmlFormatter = htmlFormatter;
         _dataProvider = dataProvider;
@@ -657,55 +652,6 @@ public partial class CustomerService : ICustomerService
     public virtual async Task UpdateCustomerAsync(Customer customer)
     {
         await _customerRepository.UpdateAsync(customer);
-    }
-
-    /// <summary>
-    /// Reset data required for checkout
-    /// </summary>
-    /// <param name="customer">Customer</param>
-    /// <param name="storeId">Store identifier</param>
-    /// <param name="clearCouponCodes">A value indicating whether to clear coupon code</param>
-    /// <param name="clearCheckoutAttributes">A value indicating whether to clear selected checkout attributes</param>
-    /// <param name="clearRewardPoints">A value indicating whether to clear "Use reward points" flag</param>
-    /// <param name="clearShippingMethod">A value indicating whether to clear selected shipping method</param>
-    /// <param name="clearPaymentMethod">A value indicating whether to clear selected payment method</param>
-    /// <returns>A task that represents the asynchronous operation</returns>
-    public virtual async Task ResetCheckoutDataAsync(Customer customer, int storeId,
-        bool clearCouponCodes = false, bool clearCheckoutAttributes = false,
-        bool clearRewardPoints = true, bool clearShippingMethod = true,
-        bool clearPaymentMethod = true)
-    {
-        ArgumentNullException.ThrowIfNull(customer);
-
-        //clear entered coupon codes
-        if (clearCouponCodes)
-        {
-            await _genericAttributeService.SaveAttributeAsync<string>(customer, NopCustomerDefaults.DiscountCouponCodeAttribute, null);
-            await _genericAttributeService.SaveAttributeAsync<string>(customer, NopCustomerDefaults.GiftCardCouponCodesAttribute, null);
-        }
-
-        //clear checkout attributes
-        if (clearCheckoutAttributes)
-            await _genericAttributeService.SaveAttributeAsync<string>(customer, NopCustomerDefaults.CheckoutAttributes, null, storeId);
-
-        //clear reward points flag
-        if (clearRewardPoints)
-            await _genericAttributeService.SaveAttributeAsync(customer, NopCustomerDefaults.UseRewardPointsDuringCheckoutAttribute, false, storeId);
-
-        //clear selected shipping method
-        if (clearShippingMethod)
-        {
-            await _genericAttributeService.SaveAttributeAsync<ShippingOption>(customer, NopCustomerDefaults.SelectedShippingOptionAttribute, null, storeId);
-            await _genericAttributeService.SaveAttributeAsync<ShippingOption>(customer, NopCustomerDefaults.OfferedShippingOptionsAttribute, null, storeId);
-            await _genericAttributeService.SaveAttributeAsync<PickupPoint>(customer, NopCustomerDefaults.SelectedPickupPointAttribute, null, storeId);
-            await _genericAttributeService.SaveAttributeAsync<DateTime?>(customer, NopCustomerDefaults.DesiredDeliveryDate, null, storeId);
-        }
-
-        //clear selected payment method
-        if (clearPaymentMethod)
-            await _genericAttributeService.SaveAttributeAsync<string>(customer, NopCustomerDefaults.SelectedPaymentMethodAttribute, null, storeId);
-
-        await _eventPublisher.PublishAsync(new ResetCheckoutDataEvent(customer, storeId));
     }
 
     /// <summary>
