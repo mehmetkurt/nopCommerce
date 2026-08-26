@@ -2601,7 +2601,7 @@ public partial class OrderController : BaseAdminController
         if (displayToCustomer)
         {
             //email
-            await _workflowMessageService.SendNewOrderNoteAddedCustomerNotificationAsync(orderNote, (await _workContext.GetWorkingLanguageAsync()).Id);
+            await _workflowMessageService.SendNewOrderNoteAddedCustomerNotificationAsync(orderNote, order.CustomerLanguageId);
         }
 
         return Json(new { Result = true });
