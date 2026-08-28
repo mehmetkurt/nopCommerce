@@ -198,13 +198,18 @@ public partial class ShoppingCartService : IShoppingCartService
     }
 
     /// <summary>
-    /// Gets a value indicating whether customer shopping cart is empty
+    /// Update "HasShoppingCartItemsAsync" value for the customer
     /// </summary>
     /// <param name="customer">Customer</param>
-    /// <returns>Result</returns>
-    protected virtual async Task<bool> IsCustomerShoppingCartEmptyAsync(Customer customer)
+    /// <returns>A task that represents the asynchronous operation</returns>
+    protected virtual async Task UpdateHasShoppingCartItemsAsync(Customer customer)
     {
-        return !await _sciRepository.Table.AnyAsync(sci => sci.CustomerId == customer.Id);
+        var hasShoppingCartItems = await _sciRepository.Table.AnyAsync(sci => sci.CustomerId == customer.Id);
+        if (hasShoppingCartItems != customer.HasShoppingCartItems)
+        {
+            customer.HasShoppingCartItems = hasShoppingCartItems;
+            await _customerService.UpdateCustomerAsync(customer);
+        }
     }
 
     /// <summary>
@@ -599,13 +604,7 @@ public partial class ShoppingCartService : IShoppingCartService
         //delete item
         await _sciRepository.DeleteAsync(shoppingCartItem);
 
-        //reset "HasShoppingCartItems" property used for performance optimization
-        var hasShoppingCartItems = !await IsCustomerShoppingCartEmptyAsync(customer);
-        if (hasShoppingCartItems != customer.HasShoppingCartItems)
-        {
-            customer.HasShoppingCartItems = hasShoppingCartItems;
-            await _customerService.UpdateCustomerAsync(customer);
-        }
+        await UpdateHasShoppingCartItemsAsync(customer);
 
         //validate checkout attributes
         if (ensureOnlyActiveCheckoutAttributes &&
@@ -664,13 +663,7 @@ public partial class ShoppingCartService : IShoppingCartService
         await _sciRepository.DeleteAsync(cart, publishEvent: false);
         await _eventPublisher.PublishAsync(new ClearShoppingCartEvent(cart));
 
-        //reset "HasShoppingCartItems" property used for performance optimization
-        var hasShoppingCartItems = !await IsCustomerShoppingCartEmptyAsync(customer);
-        if (hasShoppingCartItems != customer.HasShoppingCartItems)
-        {
-            customer.HasShoppingCartItems = hasShoppingCartItems;
-            await _customerService.UpdateCustomerAsync(customer);
-        }
+        await UpdateHasShoppingCartItemsAsync(customer);
     }
 
     /// <summary>
@@ -1673,13 +1666,7 @@ public partial class ShoppingCartService : IShoppingCartService
 
             await _sciRepository.InsertAsync(shoppingCartItem);
 
-            //updated "HasShoppingCartItems" property used for performance optimization
-            var hasShoppingCartItems = !await IsCustomerShoppingCartEmptyAsync(customer);
-            if (hasShoppingCartItems != customer.HasShoppingCartItems)
-            {
-                customer.HasShoppingCartItems = hasShoppingCartItems;
-                await _customerService.UpdateCustomerAsync(customer);
-            }
+            await UpdateHasShoppingCartItemsAsync(customer);
         }
 
         return warnings;
