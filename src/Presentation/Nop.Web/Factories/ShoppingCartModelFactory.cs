@@ -894,6 +894,7 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
         model.ShowProductImages = _shoppingCartSettings.ShowProductImagesOnShoppingCart;
         model.ShowSku = _catalogSettings.ShowSkuOnProductDetailsPage;
         model.ShowVendorName = _vendorSettings.ShowVendorOnOrderDetailsPage;
+        model.ShowItemDiscount = true;
         var customer = await _workContext.GetCurrentCustomerAsync();
         var store = await _storeContext.GetCurrentStoreAsync();
         var checkoutAttributesXml = await _genericAttributeService.GetAttributeAsync<string>(customer,

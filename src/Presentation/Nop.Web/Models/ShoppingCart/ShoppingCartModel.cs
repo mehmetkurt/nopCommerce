@@ -37,6 +37,7 @@ public partial record ShoppingCartModel : BaseNopModel
     public bool TermsOfServiceOnShoppingCartPage { get; set; }
     public bool TermsOfServiceOnOrderConfirmPage { get; set; }
     public bool TermsOfServicePopup { get; set; }
+    public bool ShowItemDiscount { get; set; }
     public DiscountBoxModel DiscountBox { get; set; }
     public GiftCardBoxModel GiftCardBox { get; set; }
     public OrderReviewDataModel OrderReviewData { get; set; }
