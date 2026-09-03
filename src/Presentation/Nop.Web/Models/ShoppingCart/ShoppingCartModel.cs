@@ -19,6 +19,7 @@ public partial record ShoppingCartModel : BaseNopModel
         OrderReviewData = new OrderReviewDataModel();
 
         ButtonPaymentMethodViewComponents = new List<Type>();
+        AvailableVendors = new List<SelectListItem>();
     }
 
     public bool OnePageCheckoutEnabled { get; set; }
@@ -47,6 +48,10 @@ public partial record ShoppingCartModel : BaseNopModel
     public bool HideCheckoutButton { get; set; }
     public bool ShowVendorName { get; set; }
 
+    public int SelectedVendorId { get; set; }
+    public IList<SelectListItem> AvailableVendors { get; set; }
+    public bool DisplayVendorList { get; set; }
+
     #region Nested Classes
 
     public partial record ShoppingCartItemModel : BaseNopEntityModel
@@ -59,41 +64,27 @@ public partial record ShoppingCartModel : BaseNopModel
         }
 
         public string Sku { get; set; }
-
         public string VendorName { get; set; }
-
         public PictureModel Picture { get; set; }
-
         public int ProductId { get; set; }
-
         public string ProductName { get; set; }
-
         public string ProductSeName { get; set; }
-
         public string UnitPrice { get; set; }
         public decimal UnitPriceValue { get; set; }
-
         public string SubTotal { get; set; }
         public decimal SubTotalValue { get; set; }
-
         public string Discount { get; set; }
         public decimal DiscountValue { get; set; }
         public int? MaximumDiscountedQty { get; set; }
-
         public int Quantity { get; set; }
         public List<SelectListItem> AllowedQuantities { get; set; }
-
         public string AttributeInfo { get; set; }
-
         public string RecurringInfo { get; set; }
-
         public string RentalInfo { get; set; }
-
         public bool AllowItemEditing { get; set; }
-
         public bool DisableRemoval { get; set; }
-
         public IList<string> Warnings { get; set; }
+        public int VendorId { get; set; }
     }
 
     public partial record CheckoutAttributeModel : BaseNopEntityModel

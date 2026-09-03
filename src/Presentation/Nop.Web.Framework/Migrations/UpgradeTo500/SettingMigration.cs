@@ -150,6 +150,10 @@ public class SettingMigration : MigrationBase
 
         //#8229
         this.SetSettingIfNotExists<ReturnRequestSettings, bool>(settings => settings.DownloadableProductsReturnRequestsAllowed, false);
+
+        //#56
+        this.SetSettingIfNotExists<ShoppingCartSettings, bool>(settings => settings.VendorRequired, false);
+        this.SetSettingIfNotExists<ShoppingCartSettings, bool>(settings => settings.VendorEnabled, false);
     }
 
     public override void Down()

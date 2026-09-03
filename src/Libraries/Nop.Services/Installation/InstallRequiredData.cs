@@ -1849,7 +1849,9 @@ public partial class InstallationService
             RoundPricesDuringCalculation = true,
             GroupTierPricesForDistinctShoppingCartItems = false,
             AllowCartItemEditing = true,
-            RenderAssociatedAttributeValueQuantity = true
+            RenderAssociatedAttributeValueQuantity = true,
+            VendorEnabled = false,
+            VendorRequired = false,
         });
 
         await SaveSettingAsync(dictionary, new OrderSettings

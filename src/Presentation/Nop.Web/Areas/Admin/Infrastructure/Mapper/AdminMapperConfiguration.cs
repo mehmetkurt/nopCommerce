@@ -1419,7 +1419,9 @@ public partial class AdminMapperConfiguration : BaseMapperProfile
             .ForMember(model => model.ShowGiftCardBox_OverrideForStore, options => options.Ignore())
             .ForMember(model => model.ShowProductImagesInMiniShoppingCart_OverrideForStore, options => options.Ignore())
             .ForMember(model => model.ShowProductImagesOnShoppingCart_OverrideForStore, options => options.Ignore())
-            .ForMember(model => model.ShowProductImagesOnWishList_OverrideForStore, options => options.Ignore());
+            .ForMember(model => model.ShowProductImagesOnWishList_OverrideForStore, options => options.Ignore())
+            .ForMember(model => model.VendorEnabled_OverrideForStore, options => options.Ignore())
+            .ForMember(model => model.VendorRequired_OverrideForStore, options => options.Ignore());
         CreateMap<ShoppingCartSettingsModel, ShoppingCartSettings>()
             .ForMember(settings => settings.RenderAssociatedAttributeValueQuantity, options => options.Ignore())
             .ForMember(settings => settings.RoundPricesDuringCalculation, options => options.Ignore());
