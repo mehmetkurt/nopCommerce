@@ -77,6 +77,7 @@ using Nop.Services.Themes;
 using Nop.Services.Topics;
 using Nop.Services.Vendors;
 using Nop.Tests.Nop.Services.Tests.ScheduleTasks;
+using Nop.Tests.Nop.Services.Tests.Tax;
 using Nop.Tests.Nop.Web.Tests.Public.Factories;
 using Nop.Web.Areas.Admin.Factories;
 using Nop.Web.Framework;
@@ -387,7 +388,7 @@ public partial class BaseNopTest
         services.AddTransient<IShippingMethodsService, ShippingMethodsService>();
         services.AddTransient<IDateRangeService, DateRangeService>();
         services.AddTransient<ITaxCategoryService, TaxCategoryService>();
-        services.AddTransient<ICheckVatService, CheckVatService>();
+        services.AddTransient<ICheckVatService, TestCheckVatService>();
         services.AddTransient<ITaxService, TaxService>();
         services.AddTransient<ILogger, DefaultLogger>();
         services.AddTransient<ICustomerActivityService, CustomerActivityService>();
@@ -424,6 +425,7 @@ public partial class BaseNopTest
         services.AddTransient<ITaxPluginManager, TaxPluginManager>();
         services.AddTransient<ISmsPluginManager, SmsPluginManager>();
         services.AddScoped<ISearchPluginManager, SearchPluginManager>();
+        services.AddTransient<IAiRecommendationPluginManager, AiRecommendationPluginManager>();
 
         //picture thumb service
         services.AddScoped<IThumbService, ThumbService>();
