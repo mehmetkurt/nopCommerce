@@ -320,30 +320,32 @@ public partial class ProductController : BaseAdminController
         await _categoryService.DeleteProductCategoriesAsync(productCategoriesToDelete);
 
         //add categories
-        foreach (var categoryId in model.SelectedCategoryIds)
-        {
-            var category = await _categoryService.GetCategoryByIdAsync(categoryId);
-            if (category is null)
-                continue;
+        var categories = await _categoryService.GetCategoriesByIdsAsync(model.SelectedCategoryIds.ToArray());
+        var productCategoriesToAdd = new List<ProductCategory>();
 
+        foreach (var category in categories)
+        {
             if (!await _categoryService.CanVendorAddProductsAsync(category))
                 continue;
 
-            if (_categoryService.FindProductCategory(existingProductCategories, product.Id, categoryId) == null)
+            if (_categoryService.FindProductCategory(existingProductCategories, product.Id, category.Id) == null)
             {
                 //find next display order
                 var displayOrder = 1;
-                var existingCategoryMapping = await _categoryService.GetProductCategoriesByCategoryIdAsync(categoryId, showHidden: true);
+                var existingCategoryMapping = await _categoryService.GetProductCategoriesByCategoryIdAsync(category.Id, showHidden: true);
                 if (existingCategoryMapping.Any())
                     displayOrder = existingCategoryMapping.Max(x => x.DisplayOrder) + 1;
-                await _categoryService.InsertProductCategoryAsync(new ProductCategory
+
+                productCategoriesToAdd.Add(new ProductCategory
                 {
                     ProductId = product.Id,
-                    CategoryId = categoryId,
+                    CategoryId = category.Id,
                     DisplayOrder = displayOrder
                 });
             }
         }
+
+        await _categoryService.InsertProductCategoriesAsync(productCategoriesToAdd);
     }
 
     protected virtual async Task SaveManufacturerMappingsAsync(Product product, ProductModel model)
@@ -355,23 +357,28 @@ public partial class ProductController : BaseAdminController
         await _manufacturerService.DeleteProductManufacturersAsync(productManufacturersToDelete);
 
         //add manufacturers
-        foreach (var manufacturerId in model.SelectedManufacturerIds)
+        var manufacturers = await _manufacturerService.GetManufacturersByIdsAsync(model.SelectedManufacturerIds.ToArray());
+        var productManufacturersToAdd = new List<ProductManufacturer>();
+
+        foreach (var manufacturer in manufacturers)
         {
-            if (_manufacturerService.FindProductManufacturer(existingProductManufacturers, product.Id, manufacturerId) == null)
+            if (_manufacturerService.FindProductManufacturer(existingProductManufacturers, product.Id, manufacturer.Id) == null)
             {
                 //find next display order
                 var displayOrder = 1;
-                var existingManufacturerMapping = await _manufacturerService.GetProductManufacturersByManufacturerIdAsync(manufacturerId, showHidden: true);
+                var existingManufacturerMapping = await _manufacturerService.GetProductManufacturersByManufacturerIdAsync(manufacturer.Id, showHidden: true);
                 if (existingManufacturerMapping.Any())
                     displayOrder = existingManufacturerMapping.Max(x => x.DisplayOrder) + 1;
-                await _manufacturerService.InsertProductManufacturerAsync(new ProductManufacturer
+
+                productManufacturersToAdd.Add(new ProductManufacturer
                 {
                     ProductId = product.Id,
-                    ManufacturerId = manufacturerId,
+                    ManufacturerId = manufacturer.Id,
                     DisplayOrder = displayOrder
                 });
             }
         }
+        await _manufacturerService.InsertProductManufacturersAsync(productManufacturersToAdd);
     }
 
     protected virtual async Task SaveDiscountMappingsAsync(Product product, ProductModel model)
@@ -933,6 +940,21 @@ public partial class ProductController : BaseAdminController
         }
     }
 
+    /// <summary>
+    /// Sanitize product description (remove disallowed HTML tags)
+    /// </summary>
+    /// <param name="model">Product model</param>
+    protected virtual void SanitizeProductDescription(ProductModel model)
+    {
+        model.FullDescription = CommonHelper.EnsureOnlyAllowedHtml(model.FullDescription);
+
+        foreach (var productLocalizedModel in model.Locales)
+        {
+            productLocalizedModel.FullDescription =
+                CommonHelper.EnsureOnlyAllowedHtml(productLocalizedModel.FullDescription);
+        }
+    }
+
     #endregion
 
     #region Methods
@@ -971,7 +993,7 @@ public partial class ProductController : BaseAdminController
 
         var productsToUpdate = data.Where(d => d.NeedToUpdate(selected));
         var currentVendor = await _workContext.GetCurrentVendorAsync();
-        
+
         if (currentVendor != null)
             productsToUpdate = productsToUpdate.Where(p => p.Product.VendorId == currentVendor.Id);
 
@@ -1092,6 +1114,9 @@ public partial class ProductController : BaseAdminController
             //a vendor should have access only to his products
             if (currentVendor != null)
                 model.VendorId = currentVendor.Id;
+
+            if (!_adminAreaSettings.RichEditorAllowJavaScript || currentVendor != null)
+                SanitizeProductDescription(model);
 
             //vendors cannot edit "Show on home page" property
             if (currentVendor != null && model.ShowOnHomepage)
@@ -1232,6 +1257,9 @@ public partial class ProductController : BaseAdminController
             //a vendor should have access only to his products
             if (currentVendor != null)
                 model.VendorId = currentVendor.Id;
+
+            if (!_adminAreaSettings.RichEditorAllowJavaScript || currentVendor != null)
+                SanitizeProductDescription(model);
 
             //we do not validate maximum number of products per vendor when editing existing products (only during creation of new products)
             //vendors cannot edit "Show on home page" property
@@ -1763,7 +1791,7 @@ public partial class ProductController : BaseAdminController
     {
         //try to get a product with the specified id
         var parentProduct = await _productService.GetProductByIdAsync(model.ProductId)
-                      ?? throw new ArgumentException("No product found with the specified id");
+            ?? throw new ArgumentException("No product found with the specified id");
 
         //a vendor should have access only to his products
         var currentVendor = await _workContext.GetCurrentVendorAsync();
@@ -1774,7 +1802,7 @@ public partial class ProductController : BaseAdminController
         if (selectedProducts.Any())
         {
             var existingRelatedProducts = await _productService.GetRelatedProductsByProductId1Async(model.ProductId, showHidden: true);
-            
+
             foreach (var product in selectedProducts)
             {
                 //a vendor should have access only to his products
@@ -1869,7 +1897,7 @@ public partial class ProductController : BaseAdminController
     {
         //try to get a product with the specified id
         var parentProduct = await _productService.GetProductByIdAsync(model.ProductId)
-                            ?? throw new ArgumentException("No product found with the specified id");
+            ?? throw new ArgumentException("No product found with the specified id");
 
         //a vendor should have access only to his products
         var currentVendor = await _workContext.GetCurrentVendorAsync();
@@ -2083,7 +2111,7 @@ public partial class ProductController : BaseAdminController
     {
         //try to get a product with the specified id
         var parentProduct = await _productService.GetProductByIdAsync(model.ProductId)
-                            ?? throw new ArgumentException("No product found with the specified id");
+            ?? throw new ArgumentException("No product found with the specified id");
 
         //a vendor should have access only to his products
         var currentVendor = await _workContext.GetCurrentVendorAsync();
@@ -2466,6 +2494,12 @@ public partial class ProductController : BaseAdminController
         if (currentVendor != null && product.VendorId != currentVendor.Id)
             return RedirectToAction("List");
 
+        if (currentVendor != null)
+        {
+            model.Value = CommonHelper.EnsureOnlyAllowedHtml(model.Value);
+            model.ValueRaw = CommonHelper.EnsureOnlyAllowedHtml(model.ValueRaw);
+        }
+
         //we allow filtering only for "Option" attribute type
         if (model.AttributeTypeId != (int)SpecificationAttributeType.Option)
             model.AllowFiltering = false;
@@ -2489,7 +2523,7 @@ public partial class ProductController : BaseAdminController
                 {
                     await _localizedEntityService.SaveLocalizedValueAsync(psa,
                         x => x.CustomValue,
-                        localized.Value,
+                        currentVendor != null ? CommonHelper.EnsureOnlyAllowedHtml(localized.Value) : localized.Value,
                         localized.LanguageId);
                 }
 
@@ -2499,7 +2533,7 @@ public partial class ProductController : BaseAdminController
                 {
                     await _localizedEntityService.SaveLocalizedValueAsync(psa,
                         x => x.CustomValue,
-                        localized.ValueRaw,
+                        currentVendor != null ? CommonHelper.EnsureOnlyAllowedHtml(localized.ValueRaw) : localized.ValueRaw,
                         localized.LanguageId);
                 }
 
@@ -2567,6 +2601,12 @@ public partial class ProductController : BaseAdminController
             return RedirectToAction("List");
         }
 
+        if (currentVendor != null)
+        {
+            model.Value = CommonHelper.EnsureOnlyAllowedHtml(model.Value);
+            model.ValueRaw = CommonHelper.EnsureOnlyAllowedHtml(model.ValueRaw);
+        }
+
         //we allow filtering and change option only for "Option" attribute type
         //save localized values for CustomHtmlText and CustomText
         switch (model.AttributeTypeId)
@@ -2582,7 +2622,7 @@ public partial class ProductController : BaseAdminController
                 {
                     await _localizedEntityService.SaveLocalizedValueAsync(psa,
                         x => x.CustomValue,
-                        localized.ValueRaw,
+                        currentVendor != null ? CommonHelper.EnsureOnlyAllowedHtml(localized.ValueRaw) : localized.ValueRaw,
                         localized.LanguageId);
                 }
 
@@ -2593,7 +2633,7 @@ public partial class ProductController : BaseAdminController
                 {
                     await _localizedEntityService.SaveLocalizedValueAsync(psa,
                         x => x.CustomValue,
-                        localized.Value,
+                        currentVendor != null ? CommonHelper.EnsureOnlyAllowedHtml(localized.Value) : localized.Value,
                         localized.LanguageId);
                 }
 
@@ -3935,7 +3975,7 @@ public partial class ProductController : BaseAdminController
     {
         //try to get a product with the specified id
         var product = await _productService.GetProductByIdAsync(model.ProductId);
-        
+
         if (product == null)
             return RedirectToAction("List", "Product");
 
@@ -4245,7 +4285,7 @@ public partial class ProductController : BaseAdminController
         if (string.IsNullOrEmpty(fileExtension) || !fileExtension.Equals(".glb"))
             return Json(new { success = false, message = "Wrong file type" });
 
-        if ((httpPostedFile.Length/1024/1024) > _mediaSettings.Object3dUploadSizeLimit)
+        if ((httpPostedFile.Length / 1024 / 1024) > _mediaSettings.Object3dUploadSizeLimit)
             return Json(new { success = false, message = $"File is too large. Maximum allowed size is {_mediaSettings.Object3dUploadSizeLimit} MB" });
 
         var pathTo3dObjects = _fileProvider.Combine(_fileProvider.GetLocalImagesPath(_mediaSettings), NopMediaDefaults.Default3dObjectsDirectoryName);
